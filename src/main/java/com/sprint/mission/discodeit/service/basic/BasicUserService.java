@@ -84,24 +84,22 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId))
         .getProfileId();
 
-    if (profileId != null) {
-      Optional<BinaryContent> binaryContent = binaryContentRepository.findById(profileId);
-      if (binaryContent.isPresent()) {
-        BinaryContent content = binaryContent.get();
-        fileManager.deleteFile(Path.of(content.getPath()));
-      }
+    Optional<BinaryContent> binaryContent = binaryContentRepository.findById(profileId);
+    if (binaryContent.isPresent()) {
+      BinaryContent content = binaryContent.get();
+      fileManager.deleteFile(Path.of(content.getPath()));
     }
     userStatusRepository.delete(userId);
     userRepository.deleteUser(userId);
   }
 
   private void duplicationCheck(UserCreateRequest userCreateRequest) {
-    List<User> users = userRepository.findAll();
-    for (User user : users) {
-      if (user.getUsername().equals(userCreateRequest.username())
-          || user.getEmail().equals(userCreateRequest.email())) {
-        throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
-      }
+    boolean isDuplicated = userRepository.findAll().stream()
+        .anyMatch(user -> user.getUsername().equals(userCreateRequest.username())
+            || user.getEmail().equals(userCreateRequest.email()));
+
+    if (isDuplicated) {
+      throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
     }
   }
 
