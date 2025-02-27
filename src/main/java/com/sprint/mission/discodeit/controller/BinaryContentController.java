@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.docs.BinaryContentControllerDocs;
+import com.sprint.mission.discodeit.exception.FileIOException;
 import com.sprint.mission.discodeit.service.basic.BinaryContentService;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
@@ -26,10 +27,15 @@ public class BinaryContentController implements BinaryContentControllerDocs {
 
   @GetMapping("/{id}")
   @Override
-  public ResponseEntity<Resource> getFileById(@PathVariable UUID id) throws MalformedURLException {
+  public ResponseEntity<Resource> getFileById(@PathVariable UUID id) {
 
     Path path = binaryContentService.find(id);
-    UrlResource resource = new UrlResource("file:" + path);
+    UrlResource resource = null;
+    try {
+      resource = new UrlResource("file:" + path);
+    } catch (MalformedURLException e) {
+      throw new FileIOException("파일 읽기 실패: " + path);
+    }
 
     String encode = UriUtils.encode(path.getFileName().toString(), StandardCharsets.UTF_8);
     String contentDisposition = "attachment; filename=\"" + encode + "\"";
