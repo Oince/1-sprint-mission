@@ -3,12 +3,15 @@ package com.sprint.mission.discodeit.entity;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 
 
 @Getter
 @ToString
+@Builder(access = AccessLevel.PRIVATE)
 public class User implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -22,17 +25,16 @@ public class User implements Serializable {
   private String password;
   private UUID profileId;
 
-  private User(String username, String email, String password) {
-    this.id = UUID.randomUUID();
-    this.createdAt = Instant.now();
-    this.updatedAt = createdAt;
-    this.email = email;
-    this.password = password;
-    this.username = username;
-  }
-
   public static User of(String username, String email, String password) {
-    return new User(username, email, password);
+    Instant now = Instant.now();
+    return User.builder()
+        .id(UUID.randomUUID())
+        .createdAt(now)
+        .updatedAt(now)
+        .username(username)
+        .email(email)
+        .password(password)
+        .build();
   }
 
   public void updateEmail(String email) {
