@@ -1,7 +1,7 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.docs.BinaryContentControllerDocs;
 import com.sprint.mission.discodeit.service.basic.BinaryContentService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -17,15 +17,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.UriUtils;
 
-@Tag(name = "Binary_content API", description = "파일 관리 API")
 @Controller
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-public class BinaryContentController {
+public class BinaryContentController implements BinaryContentControllerDocs {
 
   private final BinaryContentService binaryContentService;
 
   @GetMapping("/{id}")
+  @Override
   public ResponseEntity<Resource> getFileById(@PathVariable UUID id) throws MalformedURLException {
 
     Path path = binaryContentService.find(id);
