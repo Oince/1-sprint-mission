@@ -11,42 +11,42 @@ import java.util.*;
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf")
 public class JCFUserRepository implements UserRepository {
 
-    private final Map<UUID, User> data;
+  private final Map<UUID, User> data;
 
-    public JCFUserRepository() {
-        data = new HashMap<>(100);
-    }
+  public JCFUserRepository() {
+    data = new HashMap<>(100);
+  }
 
-    @Override
-    public User save(User user) {
-        data.put(user.getId(), user);
-        return user;
-    }
+  @Override
+  public User save(User user) {
+    data.put(user.getId(), user);
+    return user;
+  }
 
-    @Override
-    public Optional<User> findById(UUID userId) {
-        return Optional.ofNullable(data.get(userId));
-    }
+  @Override
+  public Optional<User> findById(UUID userId) {
+    return Optional.ofNullable(data.get(userId));
+  }
 
-    @Override
-    public Optional<User> findByName(String name) {
-        return data.values().stream()
-                .filter(u -> u.getName().equals(name))
-                .findFirst();
-    }
+  @Override
+  public Optional<User> findByName(String name) {
+    return data.values().stream()
+        .filter(u -> u.getUsername().equals(name))
+        .findFirst();
+  }
 
-    @Override
-    public List<User> findAll() {
-        return new ArrayList<>(data.values());
-    }
+  @Override
+  public List<User> findAll() {
+    return new ArrayList<>(data.values());
+  }
 
-    @Override
-    public void updateUser(User user) {
-        data.put(user.getId(), user);
-    }
+  @Override
+  public void updateUser(User user) {
+    data.put(user.getId(), user);
+  }
 
-    @Override
-    public void deleteUser(UUID userId) {
-        data.remove(userId);
-    }
+  @Override
+  public void deleteUser(UUID userId) {
+    data.remove(userId);
+  }
 }

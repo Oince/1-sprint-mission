@@ -9,30 +9,22 @@ import java.util.UUID;
 @Getter
 public class BinaryContent implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    private final UUID id;
-    private final Instant createdAt;
+  private final UUID id;
+  private final Instant createdAt;
 
-    private final Type type;
-    private final UUID belongTo;
-    private final String name;
-    private final String path;
+  private final String name;
+  private final String path;
 
-    public enum Type {
-        PROFILE, MESSAGE
-    }
+  private BinaryContent(UUID id, String name, String path) {
+    this.id = id;
+    this.createdAt = Instant.now();
+    this.name = name;
+    this.path = path;
+  }
 
-    private BinaryContent(UUID id, Type type, UUID belongTo, String name, String path) {
-        this.id = id;
-        this.createdAt = Instant.now();
-        this.type = type;
-        this.belongTo = belongTo;
-        this.name = name;
-        this.path = path;
-    }
-
-    public static BinaryContent of(UUID id, Type type, UUID belongTo, String name, String path) {
-        return new BinaryContent(id, type, belongTo, name, path);
-    }
+  public static BinaryContent of(UUID id, String name, String path) {
+    return new BinaryContent(id, name, path);
+  }
 }
