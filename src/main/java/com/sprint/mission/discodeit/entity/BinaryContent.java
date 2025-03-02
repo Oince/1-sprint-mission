@@ -17,13 +17,20 @@ public class BinaryContent implements Serializable {
   private final UUID id;
   private final Instant createdAt;
 
-  private final String name;
+  private final Long size;
+  private final String fileName;
+  private final String contentType;
   private final String path;
 
-  public static BinaryContent of(UUID id, String name, String path) {
+  public static BinaryContent of(UUID id, Long size, String fileName, String contentType,
+      String path) {
+    Instant now = Instant.now();
     return BinaryContent.builder()
         .id(id)
-        .name(name)
+        .createdAt(now)
+        .size(size)
+        .fileName(fileName)
+        .contentType(contentType)
         .path(path)
         .build();
   }

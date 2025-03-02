@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.nio.file.Path;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BasicMessageService implements MessageService {
 
+  private final UserRepository userRepository;
   private final ChannelRepository channelRepository;
   private final MessageRepository messageRepository;
   private final BinaryContentRepository binaryContentRepository;
@@ -33,7 +35,16 @@ public class BasicMessageService implements MessageService {
     Channel channel = channelRepository.findById(messageCreateRequest.channelId())
         .orElseThrow(
             () -> new NotFoundException("등록되지 않은 channel. id=" + messageCreateRequest.channelId()));
-    User user = channel.getUser(messageCreateRequest.writer());
+
+    User user;
+    if (channel.getType() == Channel.Type.PRIVATE) {
+      user = channel.getUser(messageCreateRequest.authorId());
+    } else {
+      user = userRepository.findById(messageCreateRequest.authorId())
+          .orElseThrow(
+              () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
+    }
+
     List<UUID> attachmentIds = attachments.stream()
         .map(BinaryContent::getId)
         .toList();
@@ -55,11 +66,12 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
-  public void updateMessage(UUID messageId, String content) {
+  public Message updateMessage(UUID messageId, String content) {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
     message.updateContent(content);
     messageRepository.updateMessage(message);
+    return message;
   }
 
   @Override
@@ -69,7 +81,8 @@ public class BasicMessageService implements MessageService {
 
     message.getAttachmentIds().stream()
         .map(attachmentId -> binaryContentRepository.findById(attachmentId)
-            .orElseThrow(() -> new NotFoundException("등록되지 않은 binary content. id=" + attachmentId)))
+            .orElseThrow(
+                () -> new NotFoundException("등록되지 않은 binary newContent. id=" + attachmentId)))
         .forEach(content -> {
           binaryContentRepository.delete(content.getId());
           fileManager.deleteFile(Path.of(content.getPath()));

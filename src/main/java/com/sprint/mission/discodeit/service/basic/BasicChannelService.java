@@ -1,8 +1,12 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
+import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.ChannelDetailResponse;
-import com.sprint.mission.discodeit.entity.*;
+import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.exception.PrivateChannelModificationException;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -10,11 +14,13 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,14 +32,18 @@ public class BasicChannelService implements ChannelService {
   private final ReadStatusRepository readStatusRepository;
 
   @Override
-  public Channel createPrivateChannel(UUID userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-    Channel channel = Channel.of(Channel.Type.PRIVATE, user.getUsername(),
-        user.getUsername() + "의 Private 채널");
-    channel.addUser(user);
-    ReadStatus readStatus = ReadStatus.of(user.getId(), channel.getId());
-    readStatusRepository.save(readStatus);
+  public Channel createPrivateChannel(List<UUID> userIds) {
+    List<User> users = userIds.stream()
+        .map(userRepository::findById)
+        .map(user -> user.orElseThrow(() -> new NotFoundException("등록되지 않은 user.")))
+        .toList();
+
+    Channel channel = Channel.of(Channel.Type.PRIVATE, users.get(0).getUsername(),
+        users.get(0).getUsername() + "의 Private 채널");
+    users.forEach(channel::addUser);
+
+    users.forEach(user -> readStatusRepository.save(ReadStatus.of(user.getId(), channel.getId())));
+
     return channelRepository.save(channel);
   }
 
@@ -75,16 +85,17 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
-  public void updateChannel(UUID channelId, PublicChannelRequest publicChannelRequest) {
+  public Channel updateChannel(UUID channelId, PublicChannelUpdateRequest updateRequest) {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
     if (channel.getType() == Channel.Type.PRIVATE) {
       throw new PrivateChannelModificationException("private 채널은 수정할 수 없습니다.");
     }
 
-    channel.updateName(publicChannelRequest.name());
-    channel.updateDescription(publicChannelRequest.description());
+    channel.updateName(updateRequest.newName());
+    channel.updateDescription(updateRequest.newDescription());
     channelRepository.updateChannel(channel);
+    return channel;
   }
 
   @Override

@@ -15,7 +15,7 @@ public interface MessageService {
 
   List<MessageDetailResponse> readAllByChannelId(UUID channelId);
 
-  void updateMessage(UUID messageId, String content);
+  Message updateMessage(UUID messageId, String content);
 
   void deleteMessage(UUID messageId);
 }

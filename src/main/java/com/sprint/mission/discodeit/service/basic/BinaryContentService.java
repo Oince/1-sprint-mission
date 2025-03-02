@@ -4,8 +4,6 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.exception.FileIOException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
-import com.sprint.mission.discodeit.repository.MessageRepository;
-import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.file.FileManager;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
@@ -21,8 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
-  private final UserRepository userRepository;
-  private final MessageRepository messageRepository;
   private final FileManager fileManager;
 
   private final Path directoryPath = Path.of(System.getProperty("user.dir"), "files");
@@ -35,7 +31,10 @@ public class BinaryContentService {
   public BinaryContent create(MultipartFile file) {
 
     UUID id = UUID.randomUUID();
-    String fileName = generateFileName(id, file.getOriginalFilename());
+    long size = file.getSize();
+    String originalFilename = file.getOriginalFilename();
+    String contentType = originalFilename.substring(originalFilename.lastIndexOf('.'));
+    String fileName = id + contentType;
     Path path = directoryPath.resolve(fileName);
 
     try {
@@ -44,30 +43,27 @@ public class BinaryContentService {
       throw new FileIOException("파일 생성 실패");
     }
 
-    BinaryContent content = BinaryContent.of(id, fileName, path.toString());
+    BinaryContent content = BinaryContent.of(id, size, fileName, contentType, path.toString());
     return binaryContentRepository.save(content);
   }
 
   public List<BinaryContent> create(List<MultipartFile> files) {
+    if (files == null) {
+      return List.of();
+    }
     return files.stream()
         .map(this::create)
         .toList();
   }
 
-  private String generateFileName(UUID id, String originalName) {
-    String extension = originalName.substring(originalName.indexOf("."));
-    return id + extension;
-  }
-
-  public Path find(UUID id) {
-    BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 binary content. id=" + id));
-    return Path.of(content.getPath());
+  public BinaryContent find(UUID id) {
+    return binaryContentRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 binary newContent. id=" + id));
   }
 
   public void delete(UUID id) {
     BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 binary content. id=" + id));
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 binary newContent. id=" + id));
     fileManager.deleteFile(Path.of(content.getPath()));
     binaryContentRepository.delete(id);
   }

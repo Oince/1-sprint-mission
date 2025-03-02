@@ -2,9 +2,14 @@ package com.sprint.mission.discodeit.controller;
 
 import com.sprint.mission.discodeit.docs.UserControllerDocs;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.UserDetailResponse;
+import com.sprint.mission.discodeit.dto.response.UserResponse;
+import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.basic.BinaryContentService;
 import com.sprint.mission.discodeit.service.basic.UserStatusService;
@@ -18,7 +23,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -36,16 +40,18 @@ public class UserController implements UserControllerDocs {
 
   @PostMapping
   @Override
-  public ResponseEntity<Void> createUser(
+  public ResponseEntity<UserResponse> createUser(
       @RequestPart UserCreateRequest userCreateRequest,
       @RequestPart(required = false) MultipartFile profile
   ) {
-    User user = userService.createUser(userCreateRequest);
+    BinaryContent content = null;
     if (profile != null) {
-      BinaryContent content = binaryContentService.create(profile);
-      user.updateProfile(content.getId());
+      content = binaryContentService.create(profile);
     }
-    return ResponseEntity.created(URI.create("/users/" + user.getId())).build();
+    User user = userService.createUser(userCreateRequest, content);
+
+    return ResponseEntity.created(URI.create("/users/" + user.getId()))
+        .body(UserResponse.from(user));
   }
 
   @GetMapping
@@ -60,19 +66,29 @@ public class UserController implements UserControllerDocs {
     return ResponseEntity.ok(userService.readUser(id));
   }
 
-  @PutMapping("/{id}")
-  @Override
-  public ResponseEntity<Void> updateUser(@PathVariable UUID id,
-      @RequestBody UserCreateRequest userCreateRequest) {
-    userService.updateUser(id, userCreateRequest);
-    return ResponseEntity.ok().build();
-  }
-
   @PatchMapping("/{id}")
   @Override
-  public ResponseEntity<Void> updateUserOnline(@PathVariable UUID id) {
-    userStatusService.update(id);
-    return ResponseEntity.ok().build();
+  public ResponseEntity<UserResponse> updateUser(
+      @PathVariable UUID id,
+      @RequestPart UserUpdateRequest userUpdateRequest,
+      @RequestPart(required = false) MultipartFile profile
+  ) {
+    BinaryContent content = null;
+    if (profile != null) {
+      content = binaryContentService.create(profile);
+    }
+    User user = userService.updateUser(id, userUpdateRequest, content);
+    return ResponseEntity.ok().body(UserResponse.from(user));
+  }
+
+  @PatchMapping("/{id}/userStatus")
+  @Override
+  public ResponseEntity<UserStatusResponse> updateUserOnline(
+      @PathVariable UUID id,
+      @RequestBody UserStatusUpdateRequest userStatusUpdateRequest
+  ) {
+    UserStatus userStatus = userStatusService.update(id, userStatusUpdateRequest.newLastActiveAt());
+    return ResponseEntity.ok().body(UserStatusResponse.from(userStatus));
   }
 
   @DeleteMapping("/{id}")

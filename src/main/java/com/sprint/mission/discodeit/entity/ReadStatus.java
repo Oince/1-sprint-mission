@@ -20,6 +20,7 @@ public class ReadStatus implements Serializable {
 
   private UUID userId;
   private UUID channelId;
+  private Instant lastReadAt;
 
   public static ReadStatus of(UUID userId, UUID channelId) {
     Instant now = Instant.now();
@@ -29,10 +30,11 @@ public class ReadStatus implements Serializable {
         .updateAt(now)
         .userId(userId)
         .channelId(channelId)
+        .lastReadAt(now)
         .build();
   }
 
-  public void update() {
-    this.updateAt = Instant.now();
+  public void updateLastReadAt(Instant lastReadAt) {
+    this.lastReadAt = lastReadAt;
   }
 }

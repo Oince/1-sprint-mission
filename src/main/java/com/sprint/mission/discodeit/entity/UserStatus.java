@@ -33,7 +33,7 @@ public class UserStatus implements Serializable {
     return minutes <= 5;
   }
 
-  public void setUpdateAt() {
-    updateAt = Instant.now();
+  public void updateLastActiveAt(Instant lastActiveAt) {
+    updateAt = lastActiveAt;
   }
 }

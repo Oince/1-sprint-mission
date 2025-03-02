@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
+import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.UserDetailResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
@@ -33,11 +34,14 @@ public class BasicUserService implements UserService {
   private final FileManager fileManager;
 
   @Override
-  public User createUser(UserCreateRequest userCreateRequest) {
-    duplicationCheck(userCreateRequest);
+  public User createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
+    duplicationCheck(userCreateRequest.username(), userCreateRequest.email());
 
     String password = generatePassword(userCreateRequest.password());
     User newUser = User.of(userCreateRequest.username(), userCreateRequest.email(), password);
+    if (binaryContent != null) {
+      newUser.updateProfile(binaryContent.getId());
+    }
 
     userStatusRepository.save(UserStatus.from(newUser.getId()));
     return userRepository.save(newUser);
@@ -66,16 +70,21 @@ public class BasicUserService implements UserService {
   }
 
   @Override
-  public void updateUser(UUID userId, UserCreateRequest userCreateRequest) {
-    duplicationCheck(userCreateRequest);
+  public User updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
+      BinaryContent binaryContent) {
+    duplicationCheck(userUpdateRequest.newUsername(), userUpdateRequest.newEmail());
 
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-    user.updateName(userCreateRequest.username());
-    user.updateEmail(userCreateRequest.email());
-    user.updatePassword(generatePassword(userCreateRequest.password()));
+    user.updateName(userUpdateRequest.newUsername());
+    user.updateEmail(userUpdateRequest.newEmail());
+    user.updatePassword(generatePassword(userUpdateRequest.newPassword()));
+    if (binaryContent != null) {
+      user.updateProfile(binaryContent.getId());
+    }
 
     userRepository.updateUser(user);
+    return user;
   }
 
   @Override
@@ -93,14 +102,14 @@ public class BasicUserService implements UserService {
     userRepository.deleteUser(userId);
   }
 
-  private void duplicationCheck(UserCreateRequest userCreateRequest) {
-    boolean isDuplicated = userRepository.findAll().stream()
-        .anyMatch(user -> user.getUsername().equals(userCreateRequest.username())
-            || user.getEmail().equals(userCreateRequest.email()));
-
-    if (isDuplicated) {
-      throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
+  private void duplicationCheck(String username, String email) {
+    List<User> users = userRepository.findAll();
+    for (User user : users) {
+      if (user.getUsername().equals(username) || user.getEmail().equals(email)) {
+        throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
+      }
     }
+
   }
 
   private String generatePassword(String password) {

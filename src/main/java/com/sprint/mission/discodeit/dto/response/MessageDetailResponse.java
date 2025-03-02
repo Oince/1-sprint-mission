@@ -10,7 +10,7 @@ public record MessageDetailResponse(
     Instant createdAt,
     Instant updatedAt,
     String content,
-    UUID writer,
+    UUID authorId,
     UUID channelId,
     List<UUID> attachmentIds
 ) {

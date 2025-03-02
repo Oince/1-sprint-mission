@@ -7,15 +7,16 @@ import java.time.Instant;
 
 @Value
 public class ErrorResult {
-    Instant timestamp;
-    int status;
-    String message;
-    String url;
 
-    public ErrorResult(HttpStatus status, String message, String url) {
-        this.timestamp = Instant.now();
-        this.status = status.value();
-        this.message = message;
-        this.url = url;
-    }
+  int status;
+  String message;
+  String url;
+  Instant timestamp;
+
+  public ErrorResult(HttpStatus status, String message, String url) {
+    this.status = status.value();
+    this.message = message;
+    this.url = url;
+    this.timestamp = Instant.now();
+  }
 }

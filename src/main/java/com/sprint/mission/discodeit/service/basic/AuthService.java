@@ -1,17 +1,14 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.response.UserDetailResponse;
 import com.sprint.mission.discodeit.dto.request.UserLoginRequest;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.AuthenticationException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -20,17 +17,16 @@ public class AuthService {
   private final UserRepository userRepository;
   private final UserStatusService userStatusService;
 
-  public UserDetailResponse login(UserLoginRequest dto) {
-    User user = userRepository.findByName(dto.name())
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. username=" + dto.name()));
+  public User login(UserLoginRequest dto) {
+    User user = userRepository.findByName(dto.username())
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. username=" + dto.username()));
 
     String password = generatePassword(dto.password());
-    if (!user.getUsername().equals(dto.name()) || !user.getPassword().equals(password)) {
+    if (!user.getUsername().equals(dto.username()) || !user.getPassword().equals(password)) {
       throw new AuthenticationException("로그인 실패");
     }
 
-    UserStatus userStatus = userStatusService.findById(user.getId());
-    return UserDetailResponse.of(user, userStatus.isOnline());
+    return user;
   }
 
   public String generatePassword(String password) {

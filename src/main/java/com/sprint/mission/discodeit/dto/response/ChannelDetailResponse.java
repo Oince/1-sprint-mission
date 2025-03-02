@@ -8,29 +8,25 @@ import java.util.List;
 import java.util.UUID;
 
 public record ChannelDetailResponse(
-        UUID id,
-        Instant createdAt,
-        Instant updatedAt,
-        Channel.Type type,
-        String name,
-        String description,
-        Instant latestMessageTime,
-        List<UUID> userIds
+    UUID id,
+    Channel.Type type,
+    String name,
+    String description,
+    Instant lastMessageAt,
+    List<UUID> participantIds
 ) {
 
-    public static ChannelDetailResponse of(Channel channel, Instant latestMessageTime) {
-        List<UUID> userIds = channel.getUsers().values().stream()
-                .map(User::getId)
-                .toList();
-        return new ChannelDetailResponse(
-                channel.getId(),
-                channel.getCreatedAt(),
-                channel.getUpdatedAt(),
-                channel.getType(),
-                channel.getName(),
-                channel.getDescription(),
-                latestMessageTime,
-                userIds
-        );
-    }
+  public static ChannelDetailResponse of(Channel channel, Instant latestMessageTime) {
+    List<UUID> userIds = channel.getUsers().values().stream()
+        .map(User::getId)
+        .toList();
+    return new ChannelDetailResponse(
+        channel.getId(),
+        channel.getType(),
+        channel.getName(),
+        channel.getDescription(),
+        latestMessageTime,
+        userIds
+    );
+  }
 }

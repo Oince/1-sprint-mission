@@ -5,50 +5,50 @@ import com.sprint.mission.discodeit.exception.DuplicateException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class UserStatusService {
 
-    private final UserStatusRepository userStatusRepository;
-    private final UserRepository userRepository;
+  private final UserStatusRepository userStatusRepository;
+  private final UserRepository userRepository;
 
-    public UserStatus create(UUID userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-        List<UserStatus> userStatuses = userStatusRepository.findAll();
+  public UserStatus create(UUID userId) {
+    userRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
+    List<UserStatus> userStatuses = userStatusRepository.findAll();
 
-        for (UserStatus userStatus : userStatuses) {
-            if (userStatus.getUserId().equals(userId)) {
-                throw new DuplicateException("이미 존재하는 user에 대한 userStatus 생성");
-            }
-        }
-
-        UserStatus userStatus = UserStatus.from(userId);
-        return userStatusRepository.save(userStatus);
+    for (UserStatus userStatus : userStatuses) {
+      if (userStatus.getUserId().equals(userId)) {
+        throw new DuplicateException("이미 존재하는 user에 대한 userStatus 생성");
+      }
     }
 
-    public void update(UUID id) {
-        UserStatus userStatus = findById(id);
-        userStatus.setUpdateAt();
-        userStatusRepository.save(userStatus);
-    }
+    UserStatus userStatus = UserStatus.from(userId);
+    return userStatusRepository.save(userStatus);
+  }
 
-    public UserStatus findById(UUID userId) {
-        return userStatusRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + userId));
-    }
+  public UserStatus update(UUID id, Instant lastActiveAt) {
+    UserStatus userStatus = findById(id);
+    userStatus.updateLastActiveAt(lastActiveAt);
+    return userStatusRepository.save(userStatus);
+  }
 
-    public List<UserStatus> findAll() {
-        return userStatusRepository.findAll();
-    }
+  public UserStatus findById(UUID userId) {
+    return userStatusRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + userId));
+  }
 
-    public void delete(UUID id) {
-        userStatusRepository.delete(id);
-    }
+  public List<UserStatus> findAll() {
+    return userStatusRepository.findAll();
+  }
+
+  public void delete(UUID id) {
+    userStatusRepository.delete(id);
+  }
 }
