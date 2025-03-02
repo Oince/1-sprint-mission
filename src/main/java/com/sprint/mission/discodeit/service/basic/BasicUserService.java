@@ -78,7 +78,9 @@ public class BasicUserService implements UserService {
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
     user.updateName(userUpdateRequest.newUsername());
     user.updateEmail(userUpdateRequest.newEmail());
-    user.updatePassword(generatePassword(userUpdateRequest.newPassword()));
+    if (userUpdateRequest.newPassword() != null) {
+      user.updatePassword(generatePassword(userUpdateRequest.newPassword()));
+    }
     if (binaryContent != null) {
       user.updateProfile(binaryContent.getId());
     }
