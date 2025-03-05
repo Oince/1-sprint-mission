@@ -70,20 +70,6 @@ public class ChannelController implements ChannelControllerDocs {
     return ResponseEntity.ok().body(ChannelResponse.from(channel));
   }
 
-  @PatchMapping("/{id}/users/{userId}")
-  @Override
-  public ResponseEntity<Void> addUser(@PathVariable UUID id, @PathVariable UUID userId) {
-    channelService.addUser(id, userId);
-    return ResponseEntity.ok().build();
-  }
-
-  @DeleteMapping("/{id}/users/{userId}")
-  @Override
-  public ResponseEntity<Void> deleteUser(@PathVariable UUID id, @PathVariable UUID userId) {
-    channelService.deleteUser(id, userId);
-    return ResponseEntity.noContent().build();
-  }
-
   @DeleteMapping("/{id}")
   @Override
   public ResponseEntity<Void> deleteChannel(@PathVariable UUID id) {

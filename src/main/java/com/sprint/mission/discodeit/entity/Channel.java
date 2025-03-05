@@ -1,15 +1,12 @@
 package com.sprint.mission.discodeit.entity;
 
-import com.sprint.mission.discodeit.exception.NotFoundException;
+import java.io.Serializable;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.*;
-
 
 @Getter
 @ToString
@@ -26,8 +23,6 @@ public class Channel implements Serializable {
   private String name;
   private String description;
 
-  private Map<UUID, User> users;
-
   public enum Type {
     PUBLIC, PRIVATE
   }
@@ -41,7 +36,6 @@ public class Channel implements Serializable {
         .type(type)
         .name(name)
         .description(description)
-        .users(new HashMap<>(100))
         .build();
   }
 
@@ -58,20 +52,5 @@ public class Channel implements Serializable {
   public void updateDescription(String description) {
     this.description = description;
     updatedAt = Instant.now();
-  }
-
-  public void addUser(User user) {
-    users.put(user.getId(), user);
-    updatedAt = Instant.now();
-  }
-
-  public void deleteUser(UUID id) {
-    users.remove(id);
-    updatedAt = Instant.now();
-  }
-
-  public User getUser(UUID userId) {
-    return Optional.ofNullable(users.get(userId))
-        .orElseThrow(() -> new NotFoundException("현재 channel에 등록되지 않은 user입니다."));
   }
 }

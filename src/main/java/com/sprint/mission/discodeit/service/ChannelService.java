@@ -20,9 +20,5 @@ public interface ChannelService {
 
   Channel updateChannel(UUID channelId, PublicChannelUpdateRequest updateRequest);
 
-  void addUser(UUID channelId, UUID userId);
-
-  void deleteUser(UUID channelId, UUID userId);
-
   void deleteChannel(UUID channelId);
 }

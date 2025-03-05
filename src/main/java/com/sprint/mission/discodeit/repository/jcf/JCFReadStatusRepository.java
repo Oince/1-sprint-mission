@@ -11,37 +11,46 @@ import java.util.*;
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf")
 public class JCFReadStatusRepository implements ReadStatusRepository {
 
-    private final Map<UUID, ReadStatus> data;
+  private final Map<UUID, ReadStatus> data;
 
-    public JCFReadStatusRepository() {
-        data = new HashMap<>(100);
-    }
+  public JCFReadStatusRepository() {
+    data = new HashMap<>(100);
+  }
 
-    @Override
-    public ReadStatus save(ReadStatus readStatus) {
-        data.put(readStatus.getId(), readStatus);
-        return readStatus;
-    }
+  @Override
+  public ReadStatus save(ReadStatus readStatus) {
+    data.put(readStatus.getId(), readStatus);
+    return readStatus;
+  }
 
-    @Override
-    public Optional<ReadStatus> findById(UUID id) {
-        return Optional.ofNullable(data.get(id));
-    }
+  @Override
+  public Optional<ReadStatus> findById(UUID id) {
+    return Optional.ofNullable(data.get(id));
+  }
 
-    @Override
-    public List<ReadStatus> findByUserId(UUID userId) {
-        return new ArrayList<>(data.values());
-    }
+  @Override
+  public List<ReadStatus> findByUserId(UUID userId) {
+    return data.values().stream()
+        .filter(readStatus -> readStatus.getUserId().equals(userId))
+        .toList();
+  }
 
-    @Override
-    public void delete(UUID id) {
-        data.remove(id);
-    }
+  @Override
+  public List<ReadStatus> findByChannelId(UUID channelId) {
+    return data.values().stream()
+        .filter(readStatus -> readStatus.getUserId().equals(channelId))
+        .toList();
+  }
 
-    @Override
-    public void deleteByChannelId(UUID channelId) {
-        data.values().stream()
-                .filter(readStatus -> readStatus.getChannelId().equals(channelId))
-                .forEach(readStatus -> delete(readStatus.getId()));
-    }
+  @Override
+  public void delete(UUID id) {
+    data.remove(id);
+  }
+
+  @Override
+  public void deleteByChannelId(UUID channelId) {
+    data.values().stream()
+        .filter(readStatus -> readStatus.getChannelId().equals(channelId))
+        .forEach(readStatus -> delete(readStatus.getId()));
+  }
 }

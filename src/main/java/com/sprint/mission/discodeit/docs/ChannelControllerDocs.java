@@ -56,20 +56,6 @@ public interface ChannelControllerDocs {
       @RequestBody PublicChannelUpdateRequest updateRequest
   );
 
-  @Operation(summary = "채널에 유저 추가")
-  @PatchMapping("/{id}/users/{userId}")
-  ResponseEntity<Void> addUser(
-      @PathVariable UUID id,
-      @PathVariable UUID userId
-  );
-
-  @Operation(summary = "채널의 유저 삭제")
-  @DeleteMapping("/{id}/users/{userId}")
-  ResponseEntity<Void> deleteUser(
-      @PathVariable UUID id,
-      @PathVariable UUID userId
-  );
-
   @Operation(summary = "채널 삭제")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "채널 삭제 성공"),

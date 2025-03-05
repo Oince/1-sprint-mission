@@ -5,11 +5,13 @@ import com.sprint.mission.discodeit.dto.response.MessageDetailResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
+import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
+import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.MessageService;
@@ -27,6 +29,7 @@ public class BasicMessageService implements MessageService {
   private final ChannelRepository channelRepository;
   private final MessageRepository messageRepository;
   private final BinaryContentRepository binaryContentRepository;
+  private final ReadStatusRepository readStatusRepository;
   private final FileManager fileManager;
 
   @Override
@@ -38,7 +41,16 @@ public class BasicMessageService implements MessageService {
 
     User user;
     if (channel.getType() == Channel.Type.PRIVATE) {
-      user = channel.getUser(messageCreateRequest.authorId());
+      List<ReadStatus> readStatuses = readStatusRepository.findByUserId(
+          messageCreateRequest.authorId());
+      ReadStatus readStatus = readStatuses.stream()
+          .filter(r -> r.getUserId().equals(messageCreateRequest.authorId()))
+          .findFirst()
+          .orElseThrow(() -> new NotFoundException(
+              "채널에 등록되지 않은 user. id=" + messageCreateRequest.authorId()));
+      user = userRepository.findById(readStatus.getUserId())
+          .orElseThrow(
+              () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
     } else {
       user = userRepository.findById(messageCreateRequest.authorId())
           .orElseThrow(

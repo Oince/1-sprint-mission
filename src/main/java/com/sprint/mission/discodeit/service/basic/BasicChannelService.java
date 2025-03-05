@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.ChannelDetailResponse;
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.entity.Channel.Type;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
@@ -40,7 +41,6 @@ public class BasicChannelService implements ChannelService {
 
     Channel channel = Channel.of(Channel.Type.PRIVATE, users.get(0).getUsername(),
         users.get(0).getUsername() + "의 Private 채널");
-    users.forEach(channel::addUser);
 
     users.forEach(user -> readStatusRepository.save(ReadStatus.of(user.getId(), channel.getId())));
 
@@ -58,17 +58,27 @@ public class BasicChannelService implements ChannelService {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
     List<Message> messages = messageRepository.findByChannelId(channelId);
+    List<UUID> participantIds = readStatusRepository.findByChannelId(channelId).stream()
+        .map(ReadStatus::getUserId)
+        .toList();
     Instant latestMessageTime = messages.stream()
         .max(Comparator.comparing(Message::getCreatedAt))
         .map(Message::getCreatedAt)
         .orElse(channel.getCreatedAt());
 
-    return ChannelDetailResponse.of(channel, latestMessageTime);
+    return ChannelDetailResponse.of(channel, latestMessageTime, participantIds);
   }
 
   @Override
   public List<ChannelDetailResponse> readAllByUserId(UUID userId) {
-    List<Channel> channels = channelRepository.findAllByUserId(userId);
+
+    List<UUID> privateChannelIds = readStatusRepository.findByUserId(userId).stream()
+        .map(ReadStatus::getChannelId)
+        .toList();
+    List<Channel> channels = channelRepository.findAll().stream()
+        .filter(channel -> channel.getType().equals(Type.PUBLIC) || privateChannelIds.contains(
+            channel.getId()))
+        .toList();
     List<ChannelDetailResponse> channelDetailResponses = new ArrayList<>(100);
 
     for (Channel channel : channels) {
@@ -77,8 +87,16 @@ public class BasicChannelService implements ChannelService {
           .max(Comparator.comparing(Message::getCreatedAt))
           .map(Message::getCreatedAt)
           .orElse(channel.getCreatedAt());
-
-      channelDetailResponses.add(ChannelDetailResponse.of(channel, latestMessageTime));
+      if (channel.getType() == Type.PUBLIC) {
+        channelDetailResponses.add(
+            ChannelDetailResponse.of(channel, latestMessageTime, null));
+      } else {
+        List<UUID> participantIds = readStatusRepository.findByChannelId(channel.getId()).stream()
+            .map(ReadStatus::getUserId)
+            .toList();
+        channelDetailResponses.add(
+            ChannelDetailResponse.of(channel, latestMessageTime, participantIds));
+      }
     }
 
     return channelDetailResponses;
@@ -96,24 +114,6 @@ public class BasicChannelService implements ChannelService {
     channel.updateDescription(updateRequest.newDescription());
     channelRepository.updateChannel(channel);
     return channel;
-  }
-
-  @Override
-  public void addUser(UUID channelId, UUID userId) {
-    Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-    channel.addUser(user);
-    channelRepository.updateChannel(channel);
-  }
-
-  @Override
-  public void deleteUser(UUID channelId, UUID userId) {
-    Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
-    channel.deleteUser(userId);
-    channelRepository.updateChannel(channel);
   }
 
   @Override

@@ -84,6 +84,29 @@ public class FileReadStatusRepository implements ReadStatusRepository {
   }
 
   @Override
+  public List<ReadStatus> findByChannelId(UUID channelId) {
+    File[] files = directoryPath.toFile().listFiles();
+    List<ReadStatus> readStatuses = new ArrayList<>(100);
+
+    if (files == null) {
+      return readStatuses;
+    }
+
+    for (File file : files) {
+      try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+        ReadStatus readStatus = (ReadStatus) ois.readObject();
+        if (readStatus.getChannelId().equals(channelId)) {
+          readStatuses.add(readStatus);
+        }
+      } catch (IOException | ClassNotFoundException e) {
+        throw new FileIOException("ReadStatus 읽기 실패");
+      }
+    }
+
+    return readStatuses;
+  }
+
+  @Override
   public void delete(UUID id) {
     Path path = directoryPath.resolve(id.toString().concat(FILE_EXTENSION));
 
