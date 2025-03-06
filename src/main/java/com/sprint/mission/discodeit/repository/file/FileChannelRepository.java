@@ -60,7 +60,7 @@ public class FileChannelRepository implements ChannelRepository {
       Channel channel = (Channel) ois.readObject();
       return Optional.of(channel);
     } catch (IOException | ClassNotFoundException e) {
-      throw new FileIOException("channel 읽기 실패");
+      return Optional.empty();
     }
   }
 

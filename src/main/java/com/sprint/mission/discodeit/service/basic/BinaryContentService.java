@@ -9,6 +9,7 @@ import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -62,8 +63,11 @@ public class BinaryContentService {
   }
 
   public void delete(UUID id) {
-    BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 binary newContent. id=" + id));
+    Optional<BinaryContent> optionalBinaryContent = binaryContentRepository.findById(id);
+    if (optionalBinaryContent.isEmpty()) {
+      return;
+    }
+    BinaryContent content = optionalBinaryContent.get();
     fileManager.deleteFile(Path.of(content.getPath()));
     binaryContentRepository.delete(id);
   }

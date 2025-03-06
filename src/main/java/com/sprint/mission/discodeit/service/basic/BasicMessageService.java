@@ -5,7 +5,6 @@ import com.sprint.mission.discodeit.dto.response.MessageDetailResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
-import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -17,6 +16,7 @@ import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,23 +39,17 @@ public class BasicMessageService implements MessageService {
         .orElseThrow(
             () -> new NotFoundException("등록되지 않은 channel. id=" + messageCreateRequest.channelId()));
 
-    User user;
     if (channel.getType() == Channel.Type.PRIVATE) {
-      List<ReadStatus> readStatuses = readStatusRepository.findByUserId(
-          messageCreateRequest.authorId());
-      ReadStatus readStatus = readStatuses.stream()
+      readStatusRepository.findByUserId(messageCreateRequest.authorId()).stream()
           .filter(r -> r.getUserId().equals(messageCreateRequest.authorId()))
           .findFirst()
           .orElseThrow(() -> new NotFoundException(
               "채널에 등록되지 않은 user. id=" + messageCreateRequest.authorId()));
-      user = userRepository.findById(readStatus.getUserId())
-          .orElseThrow(
-              () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
-    } else {
-      user = userRepository.findById(messageCreateRequest.authorId())
-          .orElseThrow(
-              () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
     }
+
+    User user = userRepository.findById(messageCreateRequest.authorId())
+        .orElseThrow(
+            () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
 
     List<UUID> attachmentIds = attachments.stream()
         .map(BinaryContent::getId)
@@ -88,16 +82,19 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public void deleteMessage(UUID messageId) {
-    Message message = messageRepository.findById(messageId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
+    Optional<Message> optionalMessage = messageRepository.findById(messageId);
+    if (optionalMessage.isEmpty()) {
+      return;
+    }
+    Message message = optionalMessage.get();
 
     message.getAttachmentIds().stream()
-        .map(attachmentId -> binaryContentRepository.findById(attachmentId)
-            .orElseThrow(
-                () -> new NotFoundException("등록되지 않은 binary newContent. id=" + attachmentId)))
+        .map(binaryContentRepository::findById)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .forEach(content -> {
-          binaryContentRepository.delete(content.getId());
           fileManager.deleteFile(Path.of(content.getPath()));
+          binaryContentRepository.delete(content.getId());
         });
 
     messageRepository.deleteMessage(messageId);

@@ -91,14 +91,17 @@ public class BasicUserService implements UserService {
 
   @Override
   public void deleteUser(UUID userId) {
-    UUID profileId = userRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId))
-        .getProfileId();
+    Optional<User> user = userRepository.findById(userId);
+    if (user.isEmpty()) {
+      return;
+    }
 
+    UUID profileId = user.get().getProfileId();
     Optional<BinaryContent> binaryContent = binaryContentRepository.findById(profileId);
     if (binaryContent.isPresent()) {
       BinaryContent content = binaryContent.get();
       fileManager.deleteFile(Path.of(content.getPath()));
+      binaryContentRepository.delete(content.getId());
     }
     userStatusRepository.delete(userId);
     userRepository.deleteUser(userId);

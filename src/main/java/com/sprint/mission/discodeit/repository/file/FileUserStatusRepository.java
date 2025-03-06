@@ -56,7 +56,7 @@ public class FileUserStatusRepository implements UserStatusRepository {
       UserStatus userStatus = (UserStatus) ois.readObject();
       return Optional.of(userStatus);
     } catch (IOException | ClassNotFoundException e) {
-      throw new FileIOException("UserStatus 읽기 실패");
+      return Optional.empty();
     }
   }
 

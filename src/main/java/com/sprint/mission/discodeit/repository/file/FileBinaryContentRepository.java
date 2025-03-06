@@ -57,7 +57,7 @@ public class FileBinaryContentRepository implements BinaryContentRepository {
       BinaryContent content = (BinaryContent) ois.readObject();
       return Optional.of(content);
     } catch (IOException | ClassNotFoundException e) {
-      throw new FileIOException("BinaryContent 읽기 실패");
+      return Optional.empty();
     }
   }
 

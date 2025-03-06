@@ -10,15 +10,19 @@ import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.exception.PrivateChannelModificationException;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.ChannelService;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,8 @@ public class BasicChannelService implements ChannelService {
   private final ChannelRepository channelRepository;
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
+  private final BinaryContentRepository binaryContentRepository;
+  private final FileManager fileManager;
 
   @Override
   public Channel createPrivateChannel(List<UUID> userIds) {
@@ -118,6 +124,19 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public void deleteChannel(UUID channelId) {
+    List<Message> messages = messageRepository.findByChannelId(channelId);
+
+    for (Message message : messages) {
+      message.getAttachmentIds().stream()
+          .map(binaryContentRepository::findById)
+          .filter(Optional::isPresent)
+          .map(Optional::get)
+          .forEach(attachment -> {
+            fileManager.deleteFile(Path.of(attachment.getPath()));
+            binaryContentRepository.delete(attachment.getId());
+          });
+    }
+
     messageRepository.deleteByChannelId(channelId);
     readStatusRepository.deleteByChannelId(channelId);
     channelRepository.deleteChannel(channelId);

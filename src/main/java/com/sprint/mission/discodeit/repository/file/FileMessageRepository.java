@@ -56,7 +56,7 @@ public class FileMessageRepository implements MessageRepository {
       Message message = (Message) ois.readObject();
       return Optional.of(message);
     } catch (IOException | ClassNotFoundException e) {
-      throw new FileIOException("messages 읽기 실패");
+      return Optional.empty();
     }
   }
 

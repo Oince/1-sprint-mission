@@ -56,7 +56,7 @@ public class FileUserRepository implements UserRepository {
       User user = (User) ois.readObject();
       return Optional.of(user);
     } catch (IOException | ClassNotFoundException e) {
-      throw new FileIOException("users 읽기 실패");
+      return Optional.empty();
     }
   }
 
