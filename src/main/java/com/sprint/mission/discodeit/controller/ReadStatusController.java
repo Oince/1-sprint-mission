@@ -33,7 +33,7 @@ public class ReadStatusController implements ReadStatusControllerDocs {
       @RequestBody ReadStatusCreateRequest readStatusCreateRequest
   ) {
     ReadStatus readStatus = readStatusService.create(readStatusCreateRequest);
-    return ResponseEntity.created(URI.create("/read_statuses/" + readStatus.getId()))
+    return ResponseEntity.created(URI.create("/readStatuses/" + readStatus.getId()))
         .body(ReadStatusResponse.from(readStatus));
   }
 
