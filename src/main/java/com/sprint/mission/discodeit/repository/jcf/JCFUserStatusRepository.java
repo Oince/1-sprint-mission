@@ -11,30 +11,42 @@ import java.util.*;
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "jcf")
 public class JCFUserStatusRepository implements UserStatusRepository {
 
-    private final Map<UUID, UserStatus> data;
+  private final Map<UUID, UserStatus> data;
 
-    public JCFUserStatusRepository() {
-        data = new HashMap<>(100);
-    }
+  public JCFUserStatusRepository() {
+    data = new HashMap<>(100);
+  }
 
-    @Override
-    public UserStatus save(UserStatus userStatus) {
-        data.put(userStatus.getUserId(), userStatus);
-        return userStatus;
-    }
+  @Override
+  public UserStatus save(UserStatus userStatus) {
+    data.put(userStatus.getId(), userStatus);
+    return userStatus;
+  }
 
-    @Override
-    public Optional<UserStatus> findById(UUID userId) {
-        return Optional.ofNullable(data.get(userId));
-    }
+  @Override
+  public Optional<UserStatus> findById(UUID id) {
+    return Optional.ofNullable(data.get(id));
+  }
 
-    @Override
-    public List<UserStatus> findAll() {
-        return new ArrayList<>(data.values());
-    }
+  @Override
+  public Optional<UserStatus> findByUserId(UUID userId) {
+    return data.values().stream()
+        .filter(userStatus -> userStatus.getUserId().equals(userId))
+        .findFirst();
+  }
 
-    @Override
-    public void delete(UUID userId) {
-        data.remove(userId);
-    }
+  @Override
+  public List<UserStatus> findAll() {
+    return new ArrayList<>(data.values());
+  }
+
+  @Override
+  public void delete(UUID id) {
+    data.remove(id);
+  }
+
+  @Override
+  public void deleteByUserId(UUID userId) {
+    data.values().removeIf(userStatus -> userStatus.getUserId().equals(userId));
+  }
 }

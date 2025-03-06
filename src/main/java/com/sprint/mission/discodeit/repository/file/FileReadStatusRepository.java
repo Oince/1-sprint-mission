@@ -56,7 +56,7 @@ public class FileReadStatusRepository implements ReadStatusRepository {
       ReadStatus readStatus = (ReadStatus) ois.readObject();
       return Optional.of(readStatus);
     } catch (IOException | ClassNotFoundException e) {
-      return Optional.empty();
+      throw new FileIOException("ReadStatus 읽기 실패");
     }
   }
 

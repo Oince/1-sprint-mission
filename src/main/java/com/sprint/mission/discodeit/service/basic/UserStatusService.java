@@ -39,9 +39,9 @@ public class UserStatusService {
     return userStatusRepository.save(userStatus);
   }
 
-  public UserStatus findById(UUID userId) {
-    return userStatusRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + userId));
+  public UserStatus findById(UUID id) {
+    return userStatusRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + id));
   }
 
   public List<UserStatus> findAll() {

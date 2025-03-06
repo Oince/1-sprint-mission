@@ -15,16 +15,21 @@ public class UserStatus implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
+  private final UUID id;
+
   private final UUID userId;
   private final Instant createdAt;
   private Instant updateAt;
+  private Instant lastActiveAt;
 
   public static UserStatus from(UUID userId) {
     Instant now = Instant.now();
     return UserStatus.builder()
+        .id(UUID.randomUUID())
         .userId(userId)
         .createdAt(now)
         .updateAt(now)
+        .lastActiveAt(now)
         .build();
   }
 

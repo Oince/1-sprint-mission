@@ -20,75 +20,102 @@ import java.util.UUID;
 @ConditionalOnProperty(name = "discodeit.repository.type", havingValue = "file")
 public class FileUserStatusRepository implements UserStatusRepository {
 
-    private final Path directoryPath;
-    private final String FILE_EXTENSION = ".ser";
+  private final Path directoryPath;
+  private final String FILE_EXTENSION = ".ser";
 
-    private final FileManager fileManager;
+  private final FileManager fileManager;
 
-    public FileUserStatusRepository(@Value("${discodeit.repository.file-directory}") String directory, FileManager fileManager) {
-        this.fileManager = fileManager;
-        this.directoryPath = Path.of(System.getProperty("user.dir"), directory, "user_statuses");
+  public FileUserStatusRepository(@Value("${discodeit.repository.file-directory}") String directory,
+      FileManager fileManager) {
+    this.fileManager = fileManager;
+    this.directoryPath = Path.of(System.getProperty("user.dir"), directory, "user_statuses");
+  }
+
+  @PostConstruct
+  private void init() {
+    fileManager.createDirectory(directoryPath);
+  }
+
+  @Override
+  public UserStatus save(UserStatus userStatus) {
+    Path path = directoryPath.resolve(userStatus.getId().toString().concat(FILE_EXTENSION));
+
+    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path.toFile()))) {
+      oos.writeObject(userStatus);
+      return userStatus;
+    } catch (IOException e) {
+      throw new FileIOException("UserStatus 저장 실패");
+    }
+  }
+
+  @Override
+  public Optional<UserStatus> findById(UUID id) {
+    Path path = directoryPath.resolve(id.toString().concat(FILE_EXTENSION));
+
+    try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
+      UserStatus userStatus = (UserStatus) ois.readObject();
+      return Optional.of(userStatus);
+    } catch (IOException | ClassNotFoundException e) {
+      throw new FileIOException("UserStatus 읽기 실패");
+    }
+  }
+
+  @Override
+  public Optional<UserStatus> findByUserId(UUID userId) {
+    File[] files = directoryPath.toFile().listFiles();
+
+    if (files == null) {
+      return Optional.empty();
     }
 
-    @PostConstruct
-    private void init() {
-        fileManager.createDirectory(directoryPath);
-    }
-
-    @Override
-    public UserStatus save(UserStatus userStatus) {
-        Path path = directoryPath.resolve(userStatus.getUserId().toString().concat(FILE_EXTENSION));
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path.toFile()))) {
-            oos.writeObject(userStatus);
-            return userStatus;
-        } catch (IOException e) {
-            throw new FileIOException("UserStatus 저장 실패");
+    for (File file : files) {
+      try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+        UserStatus userStatus = (UserStatus) ois.readObject();
+        if (userStatus.getUserId().equals(userId)) {
+          return Optional.of(userStatus);
         }
+      } catch (IOException | ClassNotFoundException e) {
+        throw new FileIOException("UserStatus 읽기 실패");
+      }
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public List<UserStatus> findAll() {
+    File[] files = directoryPath.toFile().listFiles();
+    List<UserStatus> userStatuses = new ArrayList<>(100);
+
+    if (files == null) {
+      return userStatuses;
     }
 
-    @Override
-    public Optional<UserStatus> findById(UUID userId) {
-        Path path = directoryPath.resolve(userId.toString().concat(FILE_EXTENSION));
-
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
-            UserStatus userStatus = (UserStatus) ois.readObject();
-            return Optional.of(userStatus);
-        } catch (IOException | ClassNotFoundException e) {
-            return Optional.empty();
-        }
+    for (File file : files) {
+      try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+        UserStatus userStatus = (UserStatus) ois.readObject();
+        userStatuses.add(userStatus);
+      } catch (IOException | ClassNotFoundException e) {
+        throw new FileIOException("UserStatus 읽기 실패");
+      }
     }
+    return userStatuses;
+  }
 
-    @Override
-    public List<UserStatus> findAll() {
-        File[] files = directoryPath.toFile().listFiles();
-        List<UserStatus> userStatuses = new ArrayList<>(100);
+  @Override
+  public void delete(UUID id) {
+    Path path = directoryPath.resolve(id.toString().concat(FILE_EXTENSION));
 
-        if (files == null) {
-            return userStatuses;
-        }
-
-        for (File file : files) {
-            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                UserStatus userStatus = (UserStatus) ois.readObject();
-                userStatuses.add(userStatus);
-            } catch (IOException | ClassNotFoundException e) {
-                throw new FileIOException("UserStatus 읽기 실패");
-            }
-        }
-        return userStatuses;
+    if (Files.exists(path)) {
+      try {
+        Files.delete(path);
+      } catch (IOException e) {
+        throw new FileIOException("UserStatus 삭제 실패");
+      }
     }
+  }
 
-    @Override
-    public void delete(UUID userId) {
-        Path path = directoryPath.resolve(userId.toString().concat(FILE_EXTENSION));
-
-        if (Files.exists(path)) {
-            try {
-                Files.delete(path);
-            } catch (IOException e) {
-                throw new FileIOException("UserStatus 삭제 실패");
-            }
-        }
-    }
+  @Override
+  public void deleteByUserId(UUID userId) {
+    findByUserId(userId).ifPresent(userStatus -> delete(userStatus.getUserId()));
+  }
 }
