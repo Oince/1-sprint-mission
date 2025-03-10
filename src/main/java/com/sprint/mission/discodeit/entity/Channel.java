@@ -1,25 +1,26 @@
 package com.sprint.mission.discodeit.entity;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "channels")
 @Getter
-@ToString
-@Builder(access = AccessLevel.PRIVATE)
-public class Channel implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Channel extends BaseUpdatableEntity {
 
-  private static final long serialVersionUID = 1L;
-
-  private final UUID id;
-  private final Instant createdAt;
-  private Instant updatedAt;
-
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   private Type type;
+
   private String name;
   private String description;
 
@@ -27,12 +28,15 @@ public class Channel implements Serializable {
     PUBLIC, PRIVATE
   }
 
+  @Builder(access = AccessLevel.PRIVATE)
+  private Channel(Type type, String name, String description) {
+    this.type = type;
+    this.name = name;
+    this.description = description;
+  }
+
   public static Channel of(Type type, String name, String description) {
-    Instant now = Instant.now();
     return Channel.builder()
-        .id(UUID.randomUUID())
-        .createdAt(now)
-        .updatedAt(now)
         .type(type)
         .name(name)
         .description(description)
@@ -41,16 +45,13 @@ public class Channel implements Serializable {
 
   public void updateType(Type type) {
     this.type = type;
-    updatedAt = Instant.now();
   }
 
   public void updateName(String name) {
     this.name = name;
-    updatedAt = Instant.now();
   }
 
   public void updateDescription(String description) {
     this.description = description;
-    updatedAt = Instant.now();
   }
 }

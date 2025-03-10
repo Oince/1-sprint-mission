@@ -1,46 +1,62 @@
 package com.sprint.mission.discodeit.entity;
 
-import java.io.Serializable;
-import java.time.Instant;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.List;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
-
+@Entity
+@Table(name = "messages")
 @Getter
-@ToString
-@Builder(access = AccessLevel.PRIVATE)
-public class Message implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Message extends BaseUpdatableEntity {
 
-  private static final long serialVersionUID = 1L;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "author_id")
+  private User author;
 
-  private final UUID id;
-  private final Instant createdAt;
-  private Instant updatedAt;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id")
+  private Channel channel;
 
-  private final User writer;
-  private final Channel channel;
-  private final List<UUID> attachmentIds;
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @JoinTable(
+      name = "message_attachments",
+      joinColumns = @JoinColumn(name = "message_id"),
+      inverseJoinColumns = @JoinColumn(name = "attachment_id")
+  )
+  private List<BinaryContent> attachments;
   private String content;
 
-  public static Message of(User writer, String content, Channel channel, List<UUID> attachmentIds) {
-    Instant now = Instant.now();
+  @Builder(access = AccessLevel.PRIVATE)
+  private Message(User author, Channel channel, List<BinaryContent> attachments, String content) {
+    this.author = author;
+    this.channel = channel;
+    this.attachments = attachments;
+    this.content = content;
+  }
+
+  public static Message of(User author, String content, Channel channel,
+      List<BinaryContent> attachments) {
     return Message.builder()
-        .id(UUID.randomUUID())
-        .createdAt(now)
-        .updatedAt(now)
-        .writer(writer)
+        .author(author)
         .content(content)
         .channel(channel)
-        .attachmentIds(attachmentIds)
+        .attachments(attachments)
         .build();
   }
 
   public void updateContent(String content) {
     this.content = content;
-    updatedAt = Instant.now();
   }
 }
