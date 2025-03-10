@@ -21,13 +21,13 @@ public interface BinaryContentControllerDocs {
       @ApiResponse(responseCode = "404", description = "파일을 찾을 수 없음")
   })
   @GetMapping("/{id}")
-  ResponseEntity<BinaryContentResponse> getFileById(@PathVariable UUID id);
+  ResponseEntity<BinaryContentResponse> getBinaryContentById(@PathVariable UUID id);
 
   @Operation(summary = "파일 여러개 조회")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "파일 조회 성공")
   })
   @GetMapping
-  ResponseEntity<List<BinaryContentResponse>> getFiles(
+  ResponseEntity<List<BinaryContentResponse>> getBinaryContents(
       @RequestParam List<UUID> binaryContentIds);
 }

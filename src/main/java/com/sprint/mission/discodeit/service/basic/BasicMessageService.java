@@ -12,9 +12,8 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
-import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.MessageService;
-import java.nio.file.Path;
+import com.sprint.mission.discodeit.storage.LocalBinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +29,7 @@ public class BasicMessageService implements MessageService {
   private final MessageRepository messageRepository;
   private final BinaryContentRepository binaryContentRepository;
   private final ReadStatusRepository readStatusRepository;
-  private final FileManager fileManager;
+  private final LocalBinaryContentStorage binaryContentStorage;
 
   @Override
   public Message createMessage(MessageCreateRequest messageCreateRequest,
@@ -38,23 +37,19 @@ public class BasicMessageService implements MessageService {
     Channel channel = channelRepository.findById(messageCreateRequest.channelId())
         .orElseThrow(
             () -> new NotFoundException("등록되지 않은 channel. id=" + messageCreateRequest.channelId()));
+    User user = userRepository.findById(messageCreateRequest.authorId())
+        .orElseThrow(
+            () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
 
     if (channel.getType() == Channel.Type.PRIVATE) {
-      readStatusRepository.findByUserId(messageCreateRequest.authorId()).stream()
-          .filter(r -> r.getUserId().equals(messageCreateRequest.authorId()))
+      readStatusRepository.findByUser(user).stream()
+          .filter(r -> r.getUser().getId().equals(messageCreateRequest.authorId()))
           .findFirst()
           .orElseThrow(() -> new NotFoundException(
               "채널에 등록되지 않은 user. id=" + messageCreateRequest.authorId()));
     }
 
-    User user = userRepository.findById(messageCreateRequest.authorId())
-        .orElseThrow(
-            () -> new NotFoundException("등록되지 않은 user. id=" + messageCreateRequest.authorId()));
-
-    List<UUID> attachmentIds = attachments.stream()
-        .map(BinaryContent::getId)
-        .toList();
-    Message message = Message.of(user, messageCreateRequest.content(), channel, attachmentIds);
+    Message message = Message.of(user, messageCreateRequest.content(), channel, attachments);
     return messageRepository.save(message);
   }
 
@@ -66,7 +61,9 @@ public class BasicMessageService implements MessageService {
 
   @Override
   public List<MessageDetailResponse> readAllByChannelId(UUID channelId) {
-    return messageRepository.findByChannelId(channelId).stream()
+    Channel channel = channelRepository.findById(channelId)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
+    return messageRepository.findByChannel(channel).stream()
         .map(MessageDetailResponse::from)
         .toList();
   }
@@ -76,7 +73,7 @@ public class BasicMessageService implements MessageService {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
     message.updateContent(content);
-    messageRepository.updateMessage(message);
+    messageRepository.save(message);
     return message;
   }
 
@@ -88,15 +85,15 @@ public class BasicMessageService implements MessageService {
     }
     Message message = optionalMessage.get();
 
-    message.getAttachmentIds().stream()
-        .map(binaryContentRepository::findById)
+    message.getAttachments().stream()
+        .map(attachment -> binaryContentRepository.findById(attachment.getId()))
         .filter(Optional::isPresent)
         .map(Optional::get)
         .forEach(content -> {
-          fileManager.deleteFile(Path.of(content.getPath()));
-          binaryContentRepository.delete(content.getId());
+          binaryContentStorage.delete(content.getId());
+          binaryContentRepository.deleteById(content.getId());
         });
 
-    messageRepository.deleteMessage(messageId);
+    messageRepository.deleteById(messageId);
   }
 }

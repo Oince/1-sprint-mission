@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.DuplicateException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
@@ -19,17 +20,17 @@ public class UserStatusService {
   private final UserRepository userRepository;
 
   public UserStatus create(UUID userId) {
-    userRepository.findById(userId)
+    User user = userRepository.findById(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
     List<UserStatus> userStatuses = userStatusRepository.findAll();
 
     for (UserStatus userStatus : userStatuses) {
-      if (userStatus.getUserId().equals(userId)) {
+      if (userStatus.getUser().getId().equals(userId)) {
         throw new DuplicateException("이미 존재하는 user에 대한 userStatus 생성");
       }
     }
 
-    UserStatus userStatus = UserStatus.from(userId);
+    UserStatus userStatus = UserStatus.from(user);
     return userStatusRepository.save(userStatus);
   }
 
@@ -49,6 +50,6 @@ public class UserStatusService {
   }
 
   public void delete(UUID id) {
-    userStatusRepository.delete(id);
+    userStatusRepository.deleteById(id);
   }
 }

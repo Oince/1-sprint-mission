@@ -11,18 +11,14 @@ import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
-import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import com.sprint.mission.discodeit.storage.LocalBinaryContentStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -31,19 +27,18 @@ public class BasicUserService implements UserService {
   private final UserRepository userRepository;
   private final UserStatusRepository userStatusRepository;
   private final BinaryContentRepository binaryContentRepository;
-  private final FileManager fileManager;
+  private final LocalBinaryContentStorage binaryContentStorage;
 
   @Override
   public User createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
     duplicationCheck(userCreateRequest.username(), userCreateRequest.email());
 
-    String password = generatePassword(userCreateRequest.password());
-    User newUser = User.of(userCreateRequest.username(), userCreateRequest.email(), password);
+    User newUser = User.of(userCreateRequest.username(), userCreateRequest.email(),
+        userCreateRequest.password());
     if (binaryContent != null) {
-      newUser.updateProfile(binaryContent.getId());
+      newUser.updateProfile(binaryContent);
     }
 
-    userStatusRepository.save(UserStatus.from(newUser.getId()));
     return userRepository.save(newUser);
   }
 
@@ -79,13 +74,13 @@ public class BasicUserService implements UserService {
     user.updateName(userUpdateRequest.newUsername());
     user.updateEmail(userUpdateRequest.newEmail());
     if (userUpdateRequest.newPassword() != null) {
-      user.updatePassword(generatePassword(userUpdateRequest.newPassword()));
+      user.updatePassword(userUpdateRequest.newPassword());
     }
     if (binaryContent != null) {
-      user.updateProfile(binaryContent.getId());
+      user.updateProfile(binaryContent);
     }
 
-    userRepository.updateUser(user);
+    userRepository.save(user);
     return user;
   }
 
@@ -96,15 +91,15 @@ public class BasicUserService implements UserService {
       return;
     }
 
-    UUID profileId = user.get().getProfileId();
-    Optional<BinaryContent> binaryContent = binaryContentRepository.findById(profileId);
+    BinaryContent profile = user.get().getProfile();
+    Optional<BinaryContent> binaryContent = binaryContentRepository.findById(profile.getId());
     if (binaryContent.isPresent()) {
       BinaryContent content = binaryContent.get();
-      fileManager.deleteFile(Path.of(content.getPath()));
-      binaryContentRepository.delete(content.getId());
+      binaryContentStorage.delete(content.getId());
+      binaryContentRepository.deleteById(content.getId());
     }
-    userStatusRepository.delete(userId);
-    userRepository.deleteUser(userId);
+    userStatusRepository.deleteById(userId);
+    userRepository.deleteById(userId);
   }
 
   private void duplicationCheck(String username, String email) {
@@ -114,21 +109,5 @@ public class BasicUserService implements UserService {
         throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
       }
     }
-
-  }
-
-  private String generatePassword(String password) {
-    StringBuilder builder = new StringBuilder();
-    try {
-      MessageDigest md = MessageDigest.getInstance("SHA-256");
-      byte[] digest = md.digest(password.getBytes());
-
-      for (byte b : digest) {
-        builder.append(String.format("%02x", b));
-      }
-    } catch (NoSuchAlgorithmException e) {
-      throw new IllegalArgumentException("비밀번호 암호화 오류");
-    }
-    return builder.toString();
   }
 }

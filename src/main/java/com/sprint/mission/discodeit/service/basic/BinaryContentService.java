@@ -4,10 +4,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.exception.FileIOException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
-import com.sprint.mission.discodeit.repository.file.FileManager;
-import jakarta.annotation.PostConstruct;
+import com.sprint.mission.discodeit.storage.LocalBinaryContentStorage;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,32 +18,23 @@ import org.springframework.web.multipart.MultipartFile;
 public class BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
-  private final FileManager fileManager;
-
-  private final Path directoryPath = Path.of(System.getProperty("user.dir"), "files");
-
-  @PostConstruct
-  public void init() {
-    fileManager.createDirectory(directoryPath);
-  }
+  private final LocalBinaryContentStorage binaryContentStorage;
 
   public BinaryContent create(MultipartFile file) {
 
-    UUID id = UUID.randomUUID();
     long size = file.getSize();
-    String originalFilename = file.getOriginalFilename();
-    String contentType = originalFilename.substring(originalFilename.lastIndexOf('.'));
-    String fileName = id + contentType;
-    Path path = directoryPath.resolve(fileName);
+    String fileName = file.getOriginalFilename();
+    String contentType = fileName.substring(fileName.lastIndexOf('.'));
 
+    BinaryContent content = binaryContentRepository
+        .save(BinaryContent.of(size, fileName, contentType));
     try {
-      file.transferTo(path);
+      binaryContentStorage.put(content.getId(), file.getBytes());
     } catch (IOException e) {
       throw new FileIOException("파일 생성 실패");
     }
 
-    BinaryContent content = BinaryContent.of(id, size, fileName, contentType, path.toString());
-    return binaryContentRepository.save(content);
+    return content;
   }
 
   public List<BinaryContent> create(List<MultipartFile> files) {
@@ -68,7 +57,7 @@ public class BinaryContentService {
       return;
     }
     BinaryContent content = optionalBinaryContent.get();
-    fileManager.deleteFile(Path.of(content.getPath()));
-    binaryContentRepository.delete(id);
+    binaryContentStorage.delete(content.getId());
+    binaryContentRepository.deleteById(id);
   }
 }

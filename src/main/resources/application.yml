@@ -12,6 +12,9 @@ spring:
       ddl-auto: validate
 
 discodeit:
+  storage:
+    local:
+      root-path: C:/Users/허원재/bootcamp/1-sprint-mission/files
   repository:
     type: file # jcf | file
     file-directory: .discodeit

@@ -3,13 +3,13 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.docs.BinaryContentControllerDocs;
 import com.sprint.mission.discodeit.dto.response.BinaryContentResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.repository.file.FileManager;
 import com.sprint.mission.discodeit.service.basic.BinaryContentService;
-import java.nio.file.Path;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,30 +23,35 @@ import org.springframework.web.bind.annotation.RestController;
 public class BinaryContentController implements BinaryContentControllerDocs {
 
   private final BinaryContentService binaryContentService;
-  private final FileManager fileManager;
+  private final BinaryContentStorage binaryContentStorage;
 
   @GetMapping("/{id}")
   @Override
-  public ResponseEntity<BinaryContentResponse> getFileById(@PathVariable UUID id) {
+  public ResponseEntity<BinaryContentResponse> getBinaryContentById(@PathVariable UUID id) {
 
     BinaryContent content = binaryContentService.find(id);
-    Path path = Path.of(content.getPath());
-    byte[] bytes = fileManager.readFile(path);
 
-    return ResponseEntity.ok(BinaryContentResponse.of(content, bytes));
+    return ResponseEntity.ok(BinaryContentResponse.from(content));
   }
 
   @GetMapping
   @Override
-  public ResponseEntity<List<BinaryContentResponse>> getFiles(
+  public ResponseEntity<List<BinaryContentResponse>> getBinaryContents(
       @RequestParam List<UUID> binaryContentIds) {
     ArrayList<BinaryContentResponse> responses = new ArrayList<>(100);
 
     binaryContentIds.stream()
         .map(binaryContentService::find)
-        .forEach(content -> responses.add(
-            BinaryContentResponse.of(content, fileManager.readFile(Path.of(content.getPath())))));
+        .forEach(content ->
+            responses.add(BinaryContentResponse.from(content)));
 
     return ResponseEntity.ok(responses);
+  }
+
+  @GetMapping("/{id}/download")
+  public ResponseEntity<Resource> getFile(@PathVariable UUID id) {
+    BinaryContent content = binaryContentService.find(id);
+    BinaryContentResponse response = BinaryContentResponse.from(content);
+    return binaryContentStorage.download(response);
   }
 }
