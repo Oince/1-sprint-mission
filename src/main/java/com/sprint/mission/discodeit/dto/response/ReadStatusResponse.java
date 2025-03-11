@@ -7,8 +7,6 @@ import java.util.UUID;
 
 public record ReadStatusResponse(
     UUID id,
-    Instant createdAt,
-    Instant updatedAt,
     UUID userId,
     UUID channelId,
     Instant lastReadAt
@@ -17,10 +15,8 @@ public record ReadStatusResponse(
   public static ReadStatusResponse from(ReadStatus readStatus) {
     return new ReadStatusResponse(
         readStatus.getId(),
-        readStatus.getCreatedAt(),
-        readStatus.getUpdateAt(),
-        readStatus.getUserId(),
-        readStatus.getChannelId(),
+        readStatus.getUser().getId(),
+        readStatus.getChannel().getId(),
         readStatus.getLastReadAt()
     );
   }

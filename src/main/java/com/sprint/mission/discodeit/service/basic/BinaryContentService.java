@@ -4,7 +4,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.exception.FileIOException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
-import com.sprint.mission.discodeit.storage.LocalBinaryContentStorage;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BinaryContentService {
 
   private final BinaryContentRepository binaryContentRepository;
-  private final LocalBinaryContentStorage binaryContentStorage;
+  private final BinaryContentStorage binaryContentStorage;
 
   public BinaryContent create(MultipartFile file) {
 

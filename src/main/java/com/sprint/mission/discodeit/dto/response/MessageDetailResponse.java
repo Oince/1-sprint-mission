@@ -12,18 +12,21 @@ public record MessageDetailResponse(
     String content,
     UUID authorId,
     UUID channelId,
-    List<UUID> attachmentIds
+    List<BinaryContentResponse> attachments
 ) {
 
   public static MessageDetailResponse from(Message message) {
+    List<BinaryContentResponse> attachments = message.getAttachments().stream()
+        .map(BinaryContentResponse::from)
+        .toList();
     return new MessageDetailResponse(
         message.getId(),
         message.getCreatedAt(),
         message.getUpdatedAt(),
         message.getContent(),
-        message.getWriter().getId(),
+        message.getAuthor().getId(),
         message.getChannel().getId(),
-        message.getAttachmentIds()
+        attachments
     );
   }
 }

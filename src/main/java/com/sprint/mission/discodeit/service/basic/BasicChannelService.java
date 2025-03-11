@@ -2,13 +2,11 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.ChannelDetailResponse;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Channel.Type;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.base.BaseEntity;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.exception.PrivateChannelModificationException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -17,13 +15,11 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
-import com.sprint.mission.discodeit.storage.LocalBinaryContentStorage;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +32,7 @@ public class BasicChannelService implements ChannelService {
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
   private final BinaryContentRepository binaryContentRepository;
-  private final LocalBinaryContentStorage binaryContentStorage;
+  private final BinaryContentStorage binaryContentStorage;
 
   @Override
   public Channel createPrivateChannel(List<UUID> userIds) {
@@ -50,11 +46,11 @@ public class BasicChannelService implements ChannelService {
         .forEach(name -> stringBuilder.append(name).append(","));
     stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-    Channel channel = Channel.of(Channel.Type.PRIVATE, stringBuilder.toString(), null);
-
+    Channel channel = channelRepository
+        .save(Channel.of(Channel.Type.PRIVATE, stringBuilder.toString(), null));
     users.forEach(user -> readStatusRepository.save(ReadStatus.of(user, channel)));
 
-    return channelRepository.save(channel);
+    return channel;
   }
 
   @Override
@@ -64,57 +60,22 @@ public class BasicChannelService implements ChannelService {
   }
 
   @Override
-  public ChannelDetailResponse readChannel(UUID channelId) {
-    Channel channel = channelRepository.findById(channelId)
+  public Channel readChannel(UUID channelId) {
+    return channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
-    List<Message> messages = messageRepository.findByChannel(channel);
-    List<UUID> participantIds = readStatusRepository.findByChannel(channel).stream()
-        .map(ReadStatus::getUser)
-        .map(BaseEntity::getId)
-        .toList();
-    Instant latestMessageTime = messages.stream()
-        .max(Comparator.comparing(Message::getCreatedAt))
-        .map(Message::getCreatedAt)
-        .orElse(channel.getCreatedAt());
-
-    return ChannelDetailResponse.of(channel, latestMessageTime, participantIds);
   }
 
   @Override
-  public List<ChannelDetailResponse> readAllByUserId(UUID userId) {
+  public List<Channel> readAllByUserId(UUID userId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
 
-    List<UUID> privateChannels = readStatusRepository.findByUser(user).stream()
+    List<Channel> privateChannels = readStatusRepository.findByUser(user).stream()
         .map(ReadStatus::getChannel)
-        .map(BaseEntity::getId)
         .toList();
-    List<Channel> channels = channelRepository.findAll().stream()
-        .filter(channel -> channel.getType().equals(Type.PUBLIC) || privateChannels.contains(
-            channel.getId()))
-        .toList();
-    List<ChannelDetailResponse> channelDetailResponses = new ArrayList<>(100);
+    List<Channel> publicChannels = channelRepository.findByType(Type.PUBLIC);
 
-    for (Channel channel : channels) {
-      List<Message> messages = messageRepository.findByChannel(channel);
-      Instant latestMessageTime = messages.stream()
-          .max(Comparator.comparing(Message::getCreatedAt))
-          .map(Message::getCreatedAt)
-          .orElse(channel.getCreatedAt());
-      if (channel.getType() == Type.PUBLIC) {
-        channelDetailResponses.add(
-            ChannelDetailResponse.of(channel, latestMessageTime, null));
-      } else {
-        List<UUID> participantIds = readStatusRepository.findByChannel(channel).stream()
-            .map(ReadStatus::getUser)
-            .map(BaseEntity::getId)
-            .toList();
-        channelDetailResponses.add(
-            ChannelDetailResponse.of(channel, latestMessageTime, participantIds));
-      }
-    }
-
-    return channelDetailResponses;
+    return Stream.concat(privateChannels.stream(), publicChannels.stream()).toList();
   }
 
   @Override

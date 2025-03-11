@@ -28,16 +28,14 @@ public class UserStatus extends BaseUpdatableEntity {
   private Instant lastActiveAt;
 
   @Builder(access = AccessLevel.PRIVATE)
-  private UserStatus(User user, Instant lastActiveAt) {
+  private UserStatus(User user) {
     this.user = user;
-    this.lastActiveAt = lastActiveAt;
+    this.lastActiveAt = Instant.now();
   }
 
   public static UserStatus from(User user) {
-    Instant now = Instant.now();
     return UserStatus.builder()
         .user(user)
-        .lastActiveAt(now)
         .build();
   }
 

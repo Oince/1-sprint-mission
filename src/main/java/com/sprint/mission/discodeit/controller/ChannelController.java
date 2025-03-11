@@ -5,8 +5,8 @@ import com.sprint.mission.discodeit.dto.request.PrivateChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.ChannelDetailResponse;
-import com.sprint.mission.discodeit.dto.response.ChannelResponse;
 import com.sprint.mission.discodeit.entity.Channel;
+import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.service.ChannelService;
 import java.net.URI;
 import java.util.List;
@@ -29,45 +29,50 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChannelController implements ChannelControllerDocs {
 
   private final ChannelService channelService;
+  private final ChannelMapper channelMapper;
 
   @PostMapping("/public")
   @Override
-  public ResponseEntity<ChannelResponse> createChannel(
+  public ResponseEntity<ChannelDetailResponse> createPublicChannel(
       @RequestBody PublicChannelRequest publicChannelRequest
   ) {
     Channel publicChannel = channelService.createPublicChannel(publicChannelRequest);
     return ResponseEntity.created(URI.create("channels/" + publicChannel.getId()))
-        .body(ChannelResponse.from(publicChannel));
+        .body(channelMapper.toDto(publicChannel));
   }
 
   @PostMapping("/private")
   @Override
-  public ResponseEntity<ChannelResponse> createPrivateChannel(
+  public ResponseEntity<ChannelDetailResponse> createPrivateChannel(
       @RequestBody PrivateChannelRequest privateChannelRequest
   ) {
     if (privateChannelRequest.participantIds().isEmpty()) {
       return ResponseEntity.badRequest().build();
     }
-    Channel privateChannel = channelService.createPrivateChannel(
-        privateChannelRequest.participantIds());
+    Channel privateChannel = channelService.
+        createPrivateChannel(privateChannelRequest.participantIds());
     return ResponseEntity.created(URI.create("channels/" + privateChannel.getId()))
-        .body(ChannelResponse.from(privateChannel));
+        .body(channelMapper.toDto(privateChannel));
   }
 
   @GetMapping
   @Override
   public ResponseEntity<List<ChannelDetailResponse>> getChannels(@RequestParam UUID userId) {
-    return ResponseEntity.ok(channelService.readAllByUserId(userId));
+    List<Channel> channels = channelService.readAllByUserId(userId);
+    List<ChannelDetailResponse> responses = channels.stream()
+        .map(channelMapper::toDto)
+        .toList();
+    return ResponseEntity.ok(responses);
   }
 
   @PatchMapping("/{id}")
   @Override
-  public ResponseEntity<ChannelResponse> updatePublicChannel(
+  public ResponseEntity<ChannelDetailResponse> updatePublicChannel(
       @PathVariable UUID id,
       @RequestBody PublicChannelUpdateRequest updateRequest
   ) {
     Channel channel = channelService.updateChannel(id, updateRequest);
-    return ResponseEntity.ok().body(ChannelResponse.from(channel));
+    return ResponseEntity.ok().body(channelMapper.toDto(channel));
   }
 
   @DeleteMapping("/{id}")

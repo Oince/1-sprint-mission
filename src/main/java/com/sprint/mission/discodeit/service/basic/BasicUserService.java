@@ -2,17 +2,16 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.UserDetailResponse;
+import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.DuplicateException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.storage.LocalBinaryContentStorage;
+import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,7 @@ public class BasicUserService implements UserService {
   private final UserRepository userRepository;
   private final UserStatusRepository userStatusRepository;
   private final BinaryContentRepository binaryContentRepository;
-  private final LocalBinaryContentStorage binaryContentStorage;
+  private final BinaryContentStorage binaryContentStorage;
 
   @Override
   public User createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
@@ -43,25 +42,27 @@ public class BasicUserService implements UserService {
   }
 
   @Override
-  public UserDetailResponse readUser(UUID userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-    UserStatus userStatus = userStatusRepository.findById(user.getId())
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + userId));
-    return UserDetailResponse.of(user, userStatus.isOnline());
+  public User findById(UUID id) {
+    return userRepository.findById(id)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id: " + id));
   }
 
   @Override
-  public List<UserDetailResponse> readAll() {
+  public UserResponse readUser(UUID userId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
+    return UserResponse.from(user);
+  }
+
+  @Override
+  public List<UserResponse> readAll() {
     List<User> users = userRepository.findAll();
-    List<UserDetailResponse> userDetailResponses = new ArrayList<>(100);
+    List<UserResponse> userResponses = new ArrayList<>(100);
     for (User user : users) {
-      UserStatus userStatus = userStatusRepository.findById(user.getId())
-          .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + user.getId()));
-      UserDetailResponse userDetailResponse = UserDetailResponse.of(user, userStatus.isOnline());
-      userDetailResponses.add(userDetailResponse);
+      UserResponse userResponse = UserResponse.from(user);
+      userResponses.add(userResponse);
     }
-    return userDetailResponses;
+    return userResponses;
   }
 
   @Override

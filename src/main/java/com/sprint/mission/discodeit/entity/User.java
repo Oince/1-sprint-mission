@@ -40,7 +40,6 @@ public class User extends BaseUpdatableEntity {
     this.username = username;
     this.email = email;
     this.password = password;
-    this.status = UserStatus.from(this);
   }
 
   public static User of(String username, String email, String password) {
@@ -49,6 +48,10 @@ public class User extends BaseUpdatableEntity {
         .email(email)
         .password(password)
         .build();
+  }
+
+  public void setUserStatus(UserStatus status) {
+    this.status = status;
   }
 
   public void updateEmail(String email) {

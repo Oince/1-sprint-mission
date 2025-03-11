@@ -4,7 +4,6 @@ import com.sprint.mission.discodeit.docs.UserControllerDocs;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.UserDetailResponse;
 import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
@@ -49,6 +48,7 @@ public class UserController implements UserControllerDocs {
       content = binaryContentService.create(profile);
     }
     User user = userService.createUser(userCreateRequest, content);
+    UserStatus userStatus = userStatusService.create(user);
 
     return ResponseEntity.created(URI.create("/users/" + user.getId()))
         .body(UserResponse.from(user));
@@ -56,13 +56,13 @@ public class UserController implements UserControllerDocs {
 
   @GetMapping
   @Override
-  public ResponseEntity<List<UserDetailResponse>> getUsers() {
+  public ResponseEntity<List<UserResponse>> getUsers() {
     return ResponseEntity.ok(userService.readAll());
   }
 
   @GetMapping("/{id}")
   @Override
-  public ResponseEntity<UserDetailResponse> getUser(@PathVariable UUID id) {
+  public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
     return ResponseEntity.ok(userService.readUser(id));
   }
 
@@ -87,7 +87,9 @@ public class UserController implements UserControllerDocs {
       @PathVariable UUID id,
       @RequestBody UserStatusUpdateRequest userStatusUpdateRequest
   ) {
-    UserStatus userStatus = userStatusService.update(id, userStatusUpdateRequest.newLastActiveAt());
+    User user = userService.findById(id);
+    UserStatus userStatus = userStatusService
+        .update(user, userStatusUpdateRequest.newLastActiveAt());
     return ResponseEntity.ok().body(UserStatusResponse.from(userStatus));
   }
 

@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.docs;
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.UserDetailResponse;
 import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,14 +40,14 @@ public interface UserControllerDocs {
       @ApiResponse(responseCode = "200", description = "모든 유저 조회 성공")
   })
   @GetMapping
-  ResponseEntity<List<UserDetailResponse>> getUsers();
+  ResponseEntity<List<UserResponse>> getUsers();
 
   @Operation(summary = "유저 조회")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "유저 조회 성공")
   })
   @GetMapping("/{id}")
-  ResponseEntity<UserDetailResponse> getUser(@PathVariable UUID id);
+  ResponseEntity<UserResponse> getUser(@PathVariable UUID id);
 
   @Operation(summary = "유저 수정")
   @ApiResponses({
