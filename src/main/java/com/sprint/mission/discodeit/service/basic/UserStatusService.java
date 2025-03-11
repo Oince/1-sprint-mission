@@ -26,8 +26,7 @@ public class UserStatusService {
       }
     }
 
-    UserStatus userStatus = UserStatus.from(user);
-    user.setUserStatus(userStatus);
+    UserStatus userStatus = UserStatus.create(user);
     return userStatusRepository.save(userStatus);
   }
 

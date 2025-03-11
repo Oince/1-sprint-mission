@@ -10,13 +10,12 @@ import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import java.time.Instant;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -35,14 +34,12 @@ public class ReadStatusService {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
 
-    List<ReadStatus> readStatuses = readStatusRepository.findByUser(user);
-    for (ReadStatus readStatus : readStatuses) {
-      if (readStatus.getChannel().getId().equals(channel.getId())) {
-        throw new DuplicateException("이미 존재하는 ReadStatus");
-      }
+    Optional<ReadStatus> readStatus = readStatusRepository.findByUserAndChannel(user, channel);
+    if (readStatus.isPresent()) {
+      throw new DuplicateException("이미 존재하는 ReadStatus");
     }
 
-    return readStatusRepository.save(ReadStatus.of(user, channel));
+    return readStatusRepository.save(ReadStatus.create(user, channel));
   }
 
   public ReadStatus find(UUID id) {
@@ -51,11 +48,10 @@ public class ReadStatusService {
   }
 
   public List<ReadStatus> findAllByUserId(UUID userId) {
-    Optional<User> user = userRepository.findById(userId);
-    if (user.isPresent()) {
-      return readStatusRepository.findByUser(user.get());
+    if (!userRepository.existsById(userId)) {
+      return Collections.emptyList();
     } else {
-      return new ArrayList<>();
+      return readStatusRepository.findByUser_Id(userId);
     }
   }
 

@@ -48,7 +48,7 @@ public class UserController implements UserControllerDocs {
       content = binaryContentService.create(profile);
     }
     User user = userService.createUser(userCreateRequest, content);
-    UserStatus userStatus = userStatusService.create(user);
+    userStatusService.create(user);
 
     return ResponseEntity.created(URI.create("/users/" + user.getId()))
         .body(UserResponse.from(user));
@@ -57,13 +57,18 @@ public class UserController implements UserControllerDocs {
   @GetMapping
   @Override
   public ResponseEntity<List<UserResponse>> getUsers() {
-    return ResponseEntity.ok(userService.readAll());
+    List<User> users = userService.readAll();
+    List<UserResponse> userResponses = users.stream()
+        .map(UserResponse::from)
+        .toList();
+    return ResponseEntity.ok(userResponses);
   }
 
   @GetMapping("/{id}")
   @Override
   public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
-    return ResponseEntity.ok(userService.readUser(id));
+    User user = userService.readUser(id);
+    return ResponseEntity.ok(UserResponse.from(user));
   }
 
   @PatchMapping("/{id}")
@@ -87,7 +92,7 @@ public class UserController implements UserControllerDocs {
       @PathVariable UUID id,
       @RequestBody UserStatusUpdateRequest userStatusUpdateRequest
   ) {
-    User user = userService.findById(id);
+    User user = userService.readUser(id);
     UserStatus userStatus = userStatusService
         .update(user, userStatusUpdateRequest.newLastActiveAt());
     return ResponseEntity.ok().body(UserStatusResponse.from(userStatus));

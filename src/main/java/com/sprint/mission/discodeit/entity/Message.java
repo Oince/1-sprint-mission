@@ -46,7 +46,7 @@ public class Message extends BaseUpdatableEntity {
     this.content = content;
   }
 
-  public static Message of(User author, String content, Channel channel,
+  public static Message create(User author, String content, Channel channel,
       List<BinaryContent> attachments) {
     return Message.builder()
         .author(author)

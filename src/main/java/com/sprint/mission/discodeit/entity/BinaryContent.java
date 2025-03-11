@@ -31,7 +31,7 @@ public class BinaryContent extends BaseEntity {
     this.contentType = contentType;
   }
 
-  public static BinaryContent of(Long size, String fileName, String contentType) {
+  public static BinaryContent create(Long size, String fileName, String contentType) {
     return BinaryContent.builder()
         .size(size)
         .fileName(fileName)

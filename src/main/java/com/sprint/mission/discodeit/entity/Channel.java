@@ -38,7 +38,7 @@ public class Channel extends BaseUpdatableEntity {
     this.description = description;
   }
 
-  public static Channel of(Type type, String name, String description) {
+  public static Channel create(Type type, String name, String description) {
     return Channel.builder()
         .type(type)
         .name(name)

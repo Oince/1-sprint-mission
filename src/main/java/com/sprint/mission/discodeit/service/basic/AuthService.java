@@ -19,7 +19,7 @@ public class AuthService {
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. username=" + dto.username()));
 
     String password = dto.password();
-    if (!user.getUsername().equals(dto.username()) || !user.getPassword().equals(password)) {
+    if (!(user.getUsername().equals(dto.username()) && user.getPassword().equals(password))) {
       throw new AuthenticationException("로그인 실패");
     }
 

@@ -8,6 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -42,7 +43,7 @@ public class User extends BaseUpdatableEntity {
     this.password = password;
   }
 
-  public static User of(String username, String email, String password) {
+  public static User create(String username, String email, String password) {
     return User.builder()
         .username(username)
         .email(email)
@@ -50,7 +51,7 @@ public class User extends BaseUpdatableEntity {
         .build();
   }
 
-  public void setUserStatus(UserStatus status) {
+  protected void setUserStatus(UserStatus status) {
     this.status = status;
   }
 
@@ -68,5 +69,9 @@ public class User extends BaseUpdatableEntity {
 
   public void updateProfile(BinaryContent profile) {
     this.profile = profile;
+  }
+
+  public Optional<BinaryContent> getProfile() {
+    return profile == null ? Optional.empty() : Optional.of(profile);
   }
 }

@@ -8,8 +8,7 @@ import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
-import com.sprint.mission.discodeit.exception.PrivateChannelModificationException;
-import com.sprint.mission.discodeit.repository.BinaryContentRepository;
+import com.sprint.mission.discodeit.exception.ModificationNowAllowedException;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -31,7 +30,6 @@ public class BasicChannelService implements ChannelService {
   private final ChannelRepository channelRepository;
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
-  private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
 
   @Override
@@ -44,18 +42,20 @@ public class BasicChannelService implements ChannelService {
     users.stream()
         .map(User::getUsername)
         .forEach(name -> stringBuilder.append(name).append(","));
-    stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+    if (!stringBuilder.isEmpty()) {
+      stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+    }
 
     Channel channel = channelRepository
-        .save(Channel.of(Channel.Type.PRIVATE, stringBuilder.toString(), null));
-    users.forEach(user -> readStatusRepository.save(ReadStatus.of(user, channel)));
+        .save(Channel.create(Channel.Type.PRIVATE, stringBuilder.toString(), null));
+    users.forEach(user -> readStatusRepository.save(ReadStatus.create(user, channel)));
 
     return channel;
   }
 
   @Override
   public Channel createPublicChannel(PublicChannelRequest publicChannelRequest) {
-    return channelRepository.save(Channel.of(Channel.Type.PUBLIC, publicChannelRequest.name(),
+    return channelRepository.save(Channel.create(Channel.Type.PUBLIC, publicChannelRequest.name(),
         publicChannelRequest.description()));
   }
 
@@ -67,10 +67,11 @@ public class BasicChannelService implements ChannelService {
 
   @Override
   public List<Channel> readAllByUserId(UUID userId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
+    if (!userRepository.existsById(userId)) {
+      throw new NotFoundException("등록되지 않은 user. id=" + userId);
+    }
 
-    List<Channel> privateChannels = readStatusRepository.findByUser(user).stream()
+    List<Channel> privateChannels = readStatusRepository.findByUser_Id(userId).stream()
         .map(ReadStatus::getChannel)
         .toList();
     List<Channel> publicChannels = channelRepository.findByType(Type.PUBLIC);
@@ -83,34 +84,30 @@ public class BasicChannelService implements ChannelService {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
     if (channel.getType() == Channel.Type.PRIVATE) {
-      throw new PrivateChannelModificationException("private 채널은 수정할 수 없습니다.");
+      throw new ModificationNowAllowedException("private 채널은 수정할 수 없습니다.");
     }
 
     channel.updateName(updateRequest.newName());
     channel.updateDescription(updateRequest.newDescription());
-    channelRepository.save(channel);
-    return channel;
+    return channelRepository.save(channel);
   }
 
   @Override
   public void deleteChannel(UUID channelId) {
-    Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
-    List<Message> messages = messageRepository.findByChannel(channel);
+    Optional<Channel> optionalChannel = channelRepository.findById(channelId);
+    if (optionalChannel.isEmpty()) {
+      return;
+    }
+    Channel channel = optionalChannel.get();
+    List<Message> messages = messageRepository.findByChannel_Id(channelId);
 
     for (Message message : messages) {
-      message.getAttachments().stream()
-          .map(attachment -> binaryContentRepository.findById(attachment.getId()))
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .forEach(attachment -> {
-            binaryContentStorage.delete(attachment.getId());
-            binaryContentRepository.deleteById(attachment.getId());
-          });
+      message.getAttachments()
+          .forEach(attachment -> binaryContentStorage.delete(attachment.getId()));
       messageRepository.delete(message);
     }
 
     readStatusRepository.deleteByChannel(channel);
-    channelRepository.deleteById(channelId);
+    channelRepository.delete(channel);
   }
 }

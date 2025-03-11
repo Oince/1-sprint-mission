@@ -59,7 +59,10 @@ public class MessageController implements MessageControllerDocs {
   public ResponseEntity<List<MessageDetailResponse>> getMessages(
       @RequestParam UUID channelId
   ) {
-    return ResponseEntity.ok(messageService.readAllByChannelId(channelId));
+    List<MessageDetailResponse> responses = messageService.readAllByChannelId(channelId).stream()
+        .map(MessageDetailResponse::from)
+        .toList();
+    return ResponseEntity.ok(responses);
   }
 
   @PatchMapping("/{id}")

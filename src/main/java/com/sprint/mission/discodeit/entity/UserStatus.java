@@ -10,7 +10,6 @@ import jakarta.persistence.Table;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,16 +26,14 @@ public class UserStatus extends BaseUpdatableEntity {
   @Column(nullable = false)
   private Instant lastActiveAt;
 
-  @Builder(access = AccessLevel.PRIVATE)
   private UserStatus(User user) {
     this.user = user;
     this.lastActiveAt = Instant.now();
+    user.setUserStatus(this);
   }
 
-  public static UserStatus from(User user) {
-    return UserStatus.builder()
-        .user(user)
-        .build();
+  public static UserStatus create(User user) {
+    return new UserStatus(user);
   }
 
   public boolean isOnline() {

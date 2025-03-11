@@ -6,8 +6,8 @@ import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class BinaryContentService {
     String contentType = fileName.substring(fileName.lastIndexOf('.'));
 
     BinaryContent content = binaryContentRepository
-        .save(BinaryContent.of(size, fileName, contentType));
+        .save(BinaryContent.create(size, fileName, contentType));
     try {
       binaryContentStorage.put(content.getId(), file.getBytes());
     } catch (IOException e) {
@@ -39,7 +39,7 @@ public class BinaryContentService {
 
   public List<BinaryContent> create(List<MultipartFile> files) {
     if (files == null) {
-      return List.of();
+      return Collections.emptyList();
     }
     return files.stream()
         .map(this::create)
@@ -52,12 +52,7 @@ public class BinaryContentService {
   }
 
   public void delete(UUID id) {
-    Optional<BinaryContent> optionalBinaryContent = binaryContentRepository.findById(id);
-    if (optionalBinaryContent.isEmpty()) {
-      return;
-    }
-    BinaryContent content = optionalBinaryContent.get();
-    binaryContentStorage.delete(content.getId());
+    binaryContentStorage.delete(id);
     binaryContentRepository.deleteById(id);
   }
 }

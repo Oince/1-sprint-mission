@@ -25,7 +25,7 @@ public class ChannelMapper {
   private final UserMapper userMapper;
 
   public ChannelDetailResponse toDto(Channel channel) {
-    List<Message> messages = messageRepository.findByChannel(channel);
+    List<Message> messages = messageRepository.findByChannel_Id(channel.getId());
     Instant latestMessageTime = messages.stream()
         .max(Comparator.comparing(Message::getCreatedAt))
         .map(Message::getCreatedAt)
