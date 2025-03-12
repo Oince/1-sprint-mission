@@ -15,10 +15,10 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +29,8 @@ public class BasicMessageService implements MessageService {
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
-  private final ConversionService conversionService;
 
+  @Transactional
   @Override
   public Message createMessage(MessageCreateRequest messageCreateRequest,
       List<BinaryContent> attachments) {
@@ -43,10 +43,9 @@ public class BasicMessageService implements MessageService {
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + authorId));
 
     if (channel.getType() == Channel.Type.PRIVATE) {
-      readStatusRepository.findByUserAndChannel(user, channel)
-          .ifPresent(readStatus -> {
-            throw new NotFoundException("채널에 등록되지 않은 user. id=" + authorId);
-          });
+      if (!readStatusRepository.existsByUser_IdAndChannel_Id(authorId, channelId)) {
+        throw new NotFoundException("채널에 등록되지 않은 user. id=" + authorId);
+      }
     }
 
     Message message = Message.create(user, messageCreateRequest.content(), channel, attachments);
@@ -64,6 +63,7 @@ public class BasicMessageService implements MessageService {
     return messageRepository.findPageByChannel_Id(channelId, pageable);
   }
 
+  @Transactional
   @Override
   public Message updateMessage(UUID messageId, String content) {
     Message message = messageRepository.findById(messageId)
@@ -73,6 +73,7 @@ public class BasicMessageService implements MessageService {
     return message;
   }
 
+  @Transactional
   @Override
   public void deleteMessage(UUID messageId) {
     messageRepository.findById(messageId)

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class BasicUserService implements UserService {
   private final UserRepository userRepository;
   private final BinaryContentStorage binaryContentStorage;
 
+  @Transactional
   @Override
   public User createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
     duplicationCheck(userCreateRequest.username(), userCreateRequest.email());
@@ -45,17 +47,32 @@ public class BasicUserService implements UserService {
     return userRepository.findAll();
   }
 
+  @Transactional
   @Override
   public User updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
       BinaryContent binaryContent) {
-
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-    updateDuplicationCheck(user.getId(), userUpdateRequest.newUsername(),
-        userUpdateRequest.newEmail());
 
-    user.updateName(userUpdateRequest.newUsername());
-    user.updateEmail(userUpdateRequest.newEmail());
+    List<User> users = userRepository.findAll();
+    if (userUpdateRequest.newEmail() != null) {
+      users.stream()
+          .filter(u -> u.getEmail().equals(userUpdateRequest.newEmail()))
+          .findAny()
+          .ifPresent(u -> {
+            throw new DuplicateException("중복된 이메일");
+          });
+      user.updateEmail(userUpdateRequest.newEmail());
+    }
+    if (userUpdateRequest.newUsername() != null) {
+      users.stream()
+          .filter(u -> u.getUsername().equals(userUpdateRequest.newUsername()))
+          .findAny()
+          .ifPresent(u -> {
+            throw new DuplicateException("중복된 이름");
+          });
+      user.updateName(userUpdateRequest.newUsername());
+    }
     if (userUpdateRequest.newPassword() != null) {
       user.updatePassword(userUpdateRequest.newPassword());
     }
@@ -68,6 +85,7 @@ public class BasicUserService implements UserService {
     return user;
   }
 
+  @Transactional
   @Override
   public void deleteUser(UUID userId) {
     userRepository.findById(userId)
@@ -80,18 +98,6 @@ public class BasicUserService implements UserService {
   private void duplicationCheck(String username, String email) {
     List<User> users = userRepository.findAll();
     for (User user : users) {
-      if (user.getUsername().equals(username) || user.getEmail().equals(email)) {
-        throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
-      }
-    }
-  }
-
-  private void updateDuplicationCheck(UUID id, String username, String email) {
-    List<User> users = userRepository.findAll();
-    for (User user : users) {
-      if (user.getId().equals(id)) {
-        continue;
-      }
       if (user.getUsername().equals(username) || user.getEmail().equals(email)) {
         throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
       }

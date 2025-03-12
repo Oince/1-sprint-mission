@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class UserStatusService {
 
   private final UserStatusRepository userStatusRepository;
 
+  @Transactional
   public UserStatus create(User user) {
     List<UserStatus> userStatuses = userStatusRepository.findAll();
 
@@ -30,6 +32,7 @@ public class UserStatusService {
     return userStatusRepository.save(userStatus);
   }
 
+  @Transactional
   public UserStatus update(User user, Instant lastActiveAt) {
     UserStatus userStatus = userStatusRepository.findByUser(user)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user에 대한 userStatus 접근"));
@@ -46,6 +49,7 @@ public class UserStatusService {
     return userStatusRepository.findAll();
   }
 
+  @Transactional
   public void delete(UUID id) {
     userStatusRepository.deleteById(id);
   }

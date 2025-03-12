@@ -10,7 +10,7 @@ public record MessageResponse(
     Instant createdAt,
     Instant updatedAt,
     String content,
-    UUID authorId,
+    UserResponse author,
     UUID channelId,
     List<BinaryContentResponse> attachments
 ) {
@@ -24,7 +24,7 @@ public record MessageResponse(
         message.getCreatedAt(),
         message.getUpdatedAt(),
         message.getContent(),
-        message.getAuthor().getId(),
+        UserResponse.from(message.getAuthor()),
         message.getChannel().getId(),
         attachments
     );

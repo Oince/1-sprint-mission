@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.mapper;
 import com.sprint.mission.discodeit.dto.response.ChannelResponse;
 import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.entity.Channel;
-import com.sprint.mission.discodeit.entity.Channel.Type;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.MessageRepository;
@@ -31,18 +30,15 @@ public class ChannelMapper {
         .map(Message::getCreatedAt)
         .orElse(channel.getCreatedAt());
 
-    List<UserResponse> participants;
-
-    if (channel.getType() == Type.PRIVATE) {
-      participants = readStatusRepository.findByChannel(channel).stream()
-          .map(ReadStatus::getUser)
-          .map(UserResponse::from)
-          .toList();
-    } else {
-      participants = userRepository.findAll().stream()
-          .map(UserResponse::from)
-          .toList();
-    }
+    List<UserResponse> participants = readStatusRepository.findByChannel(channel).stream()
+        .map(ReadStatus::getUser)
+        .map(UserResponse::from)
+        .toList();
+//
+//    if (channel.getType() == Type.PUBLIC) {
+//      userRepository.findAll().stream()
+//          .map(UserResponse::from)
+//    }
 
     return ChannelResponse.of(channel, latestMessageTime, participants);
   }

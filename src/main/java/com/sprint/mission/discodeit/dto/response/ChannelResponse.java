@@ -10,18 +10,18 @@ public record ChannelResponse(
     Channel.Type type,
     String name,
     String description,
-    List<UserResponse> participantIds,
+    List<UserResponse> participants,
     Instant lastMessageAt
 ) {
 
   public static ChannelResponse of(Channel channel, Instant latestMessageTime,
-      List<UserResponse> participantIds) {
+      List<UserResponse> participants) {
     return new ChannelResponse(
         channel.getId(),
         channel.getType(),
         channel.getName(),
         channel.getDescription(),
-        participantIds,
+        participants,
         latestMessageTime
     );
   }

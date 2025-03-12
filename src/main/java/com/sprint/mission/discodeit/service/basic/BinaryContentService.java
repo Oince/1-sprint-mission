@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -20,6 +21,7 @@ public class BinaryContentService {
   private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
 
+  @Transactional
   public BinaryContent create(MultipartFile file) {
 
     long size = file.getSize();
@@ -37,6 +39,7 @@ public class BinaryContentService {
     return content;
   }
 
+  @Transactional
   public List<BinaryContent> create(List<MultipartFile> files) {
     if (files == null) {
       return Collections.emptyList();
@@ -51,6 +54,7 @@ public class BinaryContentService {
         .orElseThrow(() -> new NotFoundException("등록되지 않은 binary newContent. id=" + id));
   }
 
+  @Transactional
   public void delete(UUID id) {
     binaryContentStorage.delete(id);
     binaryContentRepository.deleteById(id);
