@@ -2,13 +2,15 @@ package com.sprint.mission.discodeit.docs;
 
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.MessageDetailResponse;
+import com.sprint.mission.discodeit.dto.response.MessageResponse;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,22 +31,23 @@ public interface MessageControllerDocs {
       @ApiResponse(responseCode = "404", description = "채널 혹은 유저를 찾을 수 없음")
   })
   @PostMapping
-  ResponseEntity<MessageDetailResponse> createMessage(
+  ResponseEntity<MessageResponse> createMessage(
       @RequestPart MessageCreateRequest messageCreateRequest,
       @RequestPart(required = false) List<MultipartFile> attachments
   );
 
   @Operation(summary = "메세지 조회")
   @GetMapping("/{id}")
-  ResponseEntity<MessageDetailResponse> getMessage(
+  ResponseEntity<MessageResponse> getMessage(
       @PathVariable UUID id
   );
 
   @Operation(summary = "채널의 모든 메세지 조회")
   @ApiResponse(responseCode = "200", description = "메세지 목록 조회 성공")
   @GetMapping
-  ResponseEntity<List<MessageDetailResponse>> getMessages(
-      @RequestParam UUID channelId
+  ResponseEntity<PageResponse<MessageResponse>> getMessages(
+      @RequestParam UUID channelId,
+      Pageable pageable
   );
 
   @Operation(summary = "메세지 수정")
@@ -53,7 +56,7 @@ public interface MessageControllerDocs {
       @ApiResponse(responseCode = "404", description = "메세지를 찾을 수 없음")
   })
   @PatchMapping("/{id}")
-  ResponseEntity<MessageDetailResponse> updateMessage(
+  ResponseEntity<MessageResponse> updateMessage(
       @PathVariable UUID id,
       @RequestBody MessageUpdateRequest messageUpdateRequest
   );

@@ -3,7 +3,8 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.docs.MessageControllerDocs;
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.MessageDetailResponse;
+import com.sprint.mission.discodeit.dto.response.MessageResponse;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.MessageService;
@@ -12,6 +13,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,44 +38,44 @@ public class MessageController implements MessageControllerDocs {
 
   @PostMapping
   @Override
-  public ResponseEntity<MessageDetailResponse> createMessage(
+  public ResponseEntity<MessageResponse> createMessage(
       @RequestPart MessageCreateRequest messageCreateRequest,
       @RequestPart(required = false) List<MultipartFile> attachments
   ) {
     List<BinaryContent> binaryContents = binaryContentService.create(attachments);
     Message message = messageService.createMessage(messageCreateRequest, binaryContents);
     return ResponseEntity.created(URI.create("messages/" + message.getId()))
-        .body(MessageDetailResponse.from(message));
+        .body(MessageResponse.from(message));
   }
 
   @GetMapping("/{id}")
   @Override
-  public ResponseEntity<MessageDetailResponse> getMessage(
+  public ResponseEntity<MessageResponse> getMessage(
       @PathVariable UUID id
   ) {
     Message message = messageService.readMessage(id);
-    return ResponseEntity.ok(MessageDetailResponse.from(message));
+    return ResponseEntity.ok(MessageResponse.from(message));
   }
 
   @GetMapping
   @Override
-  public ResponseEntity<List<MessageDetailResponse>> getMessages(
-      @RequestParam UUID channelId
+  public ResponseEntity<PageResponse<MessageResponse>> getMessages(
+      @RequestParam UUID channelId,
+      Pageable pageable
   ) {
-    List<MessageDetailResponse> responses = messageService.readAllByChannelId(channelId).stream()
-        .map(MessageDetailResponse::from)
-        .toList();
-    return ResponseEntity.ok(responses);
+    Page<MessageResponse> responses = messageService.readAllByChannelId(channelId, pageable)
+        .map(MessageResponse::from);
+    return ResponseEntity.ok(PageResponse.fromPage(responses));
   }
 
   @PatchMapping("/{id}")
   @Override
-  public ResponseEntity<MessageDetailResponse> updateMessage(
+  public ResponseEntity<MessageResponse> updateMessage(
       @PathVariable UUID id,
       @RequestBody MessageUpdateRequest messageUpdateRequest
   ) {
     Message message = messageService.updateMessage(id, messageUpdateRequest.newContent());
-    return ResponseEntity.ok(MessageDetailResponse.from(message));
+    return ResponseEntity.ok(MessageResponse.from(message));
   }
 
   @DeleteMapping("/{id}")

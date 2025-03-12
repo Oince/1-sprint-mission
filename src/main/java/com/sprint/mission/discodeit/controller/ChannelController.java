@@ -4,7 +4,7 @@ import com.sprint.mission.discodeit.docs.ChannelControllerDocs;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.ChannelDetailResponse;
+import com.sprint.mission.discodeit.dto.response.ChannelResponse;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.service.ChannelService;
@@ -33,7 +33,7 @@ public class ChannelController implements ChannelControllerDocs {
 
   @PostMapping("/public")
   @Override
-  public ResponseEntity<ChannelDetailResponse> createPublicChannel(
+  public ResponseEntity<ChannelResponse> createPublicChannel(
       @RequestBody PublicChannelRequest publicChannelRequest
   ) {
     Channel publicChannel = channelService.createPublicChannel(publicChannelRequest);
@@ -43,7 +43,7 @@ public class ChannelController implements ChannelControllerDocs {
 
   @PostMapping("/private")
   @Override
-  public ResponseEntity<ChannelDetailResponse> createPrivateChannel(
+  public ResponseEntity<ChannelResponse> createPrivateChannel(
       @RequestBody PrivateChannelRequest privateChannelRequest
   ) {
     if (privateChannelRequest.participantIds().isEmpty()) {
@@ -57,9 +57,9 @@ public class ChannelController implements ChannelControllerDocs {
 
   @GetMapping
   @Override
-  public ResponseEntity<List<ChannelDetailResponse>> getChannels(@RequestParam UUID userId) {
+  public ResponseEntity<List<ChannelResponse>> getChannels(@RequestParam UUID userId) {
     List<Channel> channels = channelService.readAllByUserId(userId);
-    List<ChannelDetailResponse> responses = channels.stream()
+    List<ChannelResponse> responses = channels.stream()
         .map(channelMapper::toDto)
         .toList();
     return ResponseEntity.ok(responses);
@@ -67,7 +67,7 @@ public class ChannelController implements ChannelControllerDocs {
 
   @PatchMapping("/{id}")
   @Override
-  public ResponseEntity<ChannelDetailResponse> updatePublicChannel(
+  public ResponseEntity<ChannelResponse> updatePublicChannel(
       @PathVariable UUID id,
       @RequestBody PublicChannelUpdateRequest updateRequest
   ) {

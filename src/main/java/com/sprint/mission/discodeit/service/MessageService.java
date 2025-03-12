@@ -5,6 +5,8 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Message;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface MessageService {
 
@@ -12,7 +14,7 @@ public interface MessageService {
 
   Message readMessage(UUID messageId);
 
-  List<Message> readAllByChannelId(UUID channelId);
+  Page<Message> readAllByChannelId(UUID channelId, Pageable pageable);
 
   Message updateMessage(UUID messageId, String content);
 

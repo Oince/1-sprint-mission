@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -58,8 +60,8 @@ public class BasicMessageService implements MessageService {
   }
 
   @Override
-  public List<Message> readAllByChannelId(UUID channelId) {
-    return messageRepository.findByChannel_Id(channelId);
+  public Page<Message> readAllByChannelId(UUID channelId, Pageable pageable) {
+    return messageRepository.findPageByChannel_Id(channelId, pageable);
   }
 
   @Override

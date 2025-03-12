@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record ChannelDetailResponse(
+public record ChannelResponse(
     UUID id,
     Channel.Type type,
     String name,
@@ -14,9 +14,9 @@ public record ChannelDetailResponse(
     Instant lastMessageAt
 ) {
 
-  public static ChannelDetailResponse of(Channel channel, Instant latestMessageTime,
+  public static ChannelResponse of(Channel channel, Instant latestMessageTime,
       List<UserResponse> participantIds) {
-    return new ChannelDetailResponse(
+    return new ChannelResponse(
         channel.getId(),
         channel.getType(),
         channel.getName(),

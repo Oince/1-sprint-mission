@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record MessageDetailResponse(
+public record MessageResponse(
     UUID id,
     Instant createdAt,
     Instant updatedAt,
@@ -15,11 +15,11 @@ public record MessageDetailResponse(
     List<BinaryContentResponse> attachments
 ) {
 
-  public static MessageDetailResponse from(Message message) {
+  public static MessageResponse from(Message message) {
     List<BinaryContentResponse> attachments = message.getAttachments().stream()
         .map(BinaryContentResponse::from)
         .toList();
-    return new MessageDetailResponse(
+    return new MessageResponse(
         message.getId(),
         message.getCreatedAt(),
         message.getUpdatedAt(),
