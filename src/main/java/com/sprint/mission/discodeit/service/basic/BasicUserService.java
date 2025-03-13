@@ -38,43 +38,39 @@ public class BasicUserService implements UserService {
 
   @Override
   public User readUser(UUID userId) {
-    return userRepository.findById(userId)
+    return userRepository.findByIdWithProfileAndStatus(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
   }
 
   @Override
   public List<User> readAll() {
-    return userRepository.findAll();
+    return userRepository.findAllWithProfileAndStatus();
   }
 
   @Transactional
   @Override
   public User updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
       BinaryContent binaryContent) {
-    User user = userRepository.findById(userId)
+    String newEmail = userUpdateRequest.newUsername();
+    String newUsername = userUpdateRequest.newUsername();
+    String newPassword = userUpdateRequest.newPassword();
+    User user = userRepository.findByIdWithProfile(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
 
-    List<User> users = userRepository.findAll();
-    if (userUpdateRequest.newEmail() != null) {
-      users.stream()
-          .filter(u -> u.getEmail().equals(userUpdateRequest.newEmail()))
-          .findAny()
-          .ifPresent(u -> {
-            throw new DuplicateException("중복된 이메일");
-          });
-      user.updateEmail(userUpdateRequest.newEmail());
+    if (newEmail != null) {
+      if (!user.getEmail().equals(newEmail) && userRepository.existsByEmail(newEmail)) {
+        throw new DuplicateException("중복된 이메일");
+      }
+      user.updateEmail(newEmail);
     }
-    if (userUpdateRequest.newUsername() != null) {
-      users.stream()
-          .filter(u -> u.getUsername().equals(userUpdateRequest.newUsername()))
-          .findAny()
-          .ifPresent(u -> {
-            throw new DuplicateException("중복된 이름");
-          });
-      user.updateName(userUpdateRequest.newUsername());
+    if (newUsername != null) {
+      if (!user.getUsername().equals(newUsername) && userRepository.existsByUsername(newUsername)) {
+        throw new DuplicateException("중복된 이름");
+      }
+      user.updateName(newUsername);
     }
-    if (userUpdateRequest.newPassword() != null) {
-      user.updatePassword(userUpdateRequest.newPassword());
+    if (newPassword != null) {
+      user.updatePassword(newPassword);
     }
     if (binaryContent != null) {
       user.getProfile().ifPresent(content -> binaryContentStorage.delete(content.getId()));
@@ -88,7 +84,7 @@ public class BasicUserService implements UserService {
   @Transactional
   @Override
   public void deleteUser(UUID userId) {
-    userRepository.findById(userId)
+    userRepository.findByIdWithProfile(userId)
         .ifPresent(user -> {
           user.getProfile().ifPresent(content -> binaryContentStorage.delete(content.getId()));
           userRepository.delete(user);
@@ -96,11 +92,8 @@ public class BasicUserService implements UserService {
   }
 
   private void duplicationCheck(String username, String email) {
-    List<User> users = userRepository.findAll();
-    for (User user : users) {
-      if (user.getUsername().equals(username) || user.getEmail().equals(email)) {
-        throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
-      }
+    if (userRepository.existsByEmail(email) || userRepository.existsByUsername(username)) {
+      throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
     }
   }
 }

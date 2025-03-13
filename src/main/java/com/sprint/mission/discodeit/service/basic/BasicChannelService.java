@@ -94,7 +94,7 @@ public class BasicChannelService implements ChannelService {
       return;
     }
     Channel channel = optionalChannel.get();
-    List<Message> messages = messageRepository.findByChannel_Id(channelId);
+    List<Message> messages = messageRepository.findByChannel_IdWithAttachments(channelId);
 
     for (Message message : messages) {
       message.getAttachments()

@@ -5,10 +5,16 @@ import com.sprint.mission.discodeit.entity.ReadStatus;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
 
-  List<ReadStatus> findByUser_Id(UUID userId);
+  @Query("SELECT rs FROM ReadStatus rs "
+      + "JOIN FETCH rs.channel "
+      + "JOIN FETCH rs.user "
+      + "WHERE rs.user.id = :userId")
+  List<ReadStatus> findByUser_Id(@Param("userId") UUID userId);
 
   List<ReadStatus> findByChannel(Channel channel);
 

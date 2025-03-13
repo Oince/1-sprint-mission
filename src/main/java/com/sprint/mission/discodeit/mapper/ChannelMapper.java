@@ -7,7 +7,6 @@ import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
-import com.sprint.mission.discodeit.repository.UserRepository;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ChannelMapper {
 
-  private final UserRepository userRepository;
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
   private final UserMapper userMapper;
@@ -34,11 +32,6 @@ public class ChannelMapper {
         .map(ReadStatus::getUser)
         .map(UserResponse::from)
         .toList();
-//
-//    if (channel.getType() == Type.PUBLIC) {
-//      userRepository.findAll().stream()
-//          .map(UserResponse::from)
-//    }
 
     return ChannelResponse.of(channel, latestMessageTime, participants);
   }

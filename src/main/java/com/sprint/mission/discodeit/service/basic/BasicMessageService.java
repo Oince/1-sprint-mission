@@ -76,7 +76,7 @@ public class BasicMessageService implements MessageService {
   @Transactional
   @Override
   public void deleteMessage(UUID messageId) {
-    messageRepository.findById(messageId)
+    messageRepository.findByIdWithAttachments(messageId)
         .ifPresent(message -> {
           message.getAttachments()
               .forEach(attachment -> binaryContentStorage.delete(attachment.getId()));

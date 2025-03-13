@@ -20,12 +20,8 @@ public class UserStatusService {
 
   @Transactional
   public UserStatus create(User user) {
-    List<UserStatus> userStatuses = userStatusRepository.findAll();
-
-    for (UserStatus userStatus : userStatuses) {
-      if (userStatus.getUser().getId().equals(user.getId())) {
-        throw new DuplicateException("이미 존재하는 user에 대한 userStatus 생성");
-      }
+    if (userStatusRepository.existsByUser(user)) {
+      throw new DuplicateException("이미 존재하는 user에 대한 userStatus 생성");
     }
 
     UserStatus userStatus = UserStatus.create(user);
@@ -46,7 +42,7 @@ public class UserStatusService {
   }
 
   public List<UserStatus> findAll() {
-    return userStatusRepository.findAll();
+    return userStatusRepository.findAllWithUser();
   }
 
   @Transactional
