@@ -2,11 +2,15 @@ package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.request.UserCreateRequest;
 import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.DuplicateException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.util.List;
 import java.util.UUID;
@@ -16,13 +20,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
   private final UserRepository userRepository;
+  private final UserStatusRepository userStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
+  private final UserMapper userMapper;
 
   @Transactional
-  public User createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
+  public UserResponse createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
     duplicationCheck(userCreateRequest.username(), userCreateRequest.email());
 
     User newUser = User.create(userCreateRequest.username(), userCreateRequest.email(),
@@ -30,21 +37,26 @@ public class UserService {
     if (binaryContent != null) {
       newUser.updateProfile(binaryContent);
     }
+    userRepository.save(newUser);
+    userStatusRepository.save(UserStatus.create(newUser));
 
-    return userRepository.save(newUser);
+    return userMapper.toDto(newUser);
   }
 
-  public User readUser(UUID userId) {
-    return userRepository.findByIdWithProfileAndStatus(userId)
+  public UserResponse readUser(UUID userId) {
+    User user = userRepository.findByIdWithProfileAndStatus(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
+    return userMapper.toDto(user);
   }
 
-  public List<User> readAll() {
-    return userRepository.findAllWithProfileAndStatus();
+  public List<UserResponse> readAll() {
+    return userRepository.findAllWithProfileAndStatus().stream()
+        .map(userMapper::toDto)
+        .toList();
   }
 
   @Transactional
-  public User updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
+  public UserResponse updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
       BinaryContent binaryContent) {
     String newEmail = userUpdateRequest.newUsername();
     String newUsername = userUpdateRequest.newUsername();
@@ -73,7 +85,7 @@ public class UserService {
     }
 
     userRepository.save(user);
-    return user;
+    return userMapper.toDto(user);
   }
 
   @Transactional

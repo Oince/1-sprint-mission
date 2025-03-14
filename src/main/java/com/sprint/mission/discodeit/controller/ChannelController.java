@@ -5,13 +5,12 @@ import com.sprint.mission.discodeit.dto.request.PrivateChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.ChannelResponse;
-import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.service.ChannelService;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,9 +35,8 @@ public class ChannelController implements ChannelControllerDocs {
   public ResponseEntity<ChannelResponse> createPublicChannel(
       @RequestBody PublicChannelRequest publicChannelRequest
   ) {
-    Channel publicChannel = channelService.createPublicChannel(publicChannelRequest);
-    return ResponseEntity.created(URI.create("channels/" + publicChannel.getId()))
-        .body(channelMapper.toDto(publicChannel));
+    ChannelResponse publicChannel = channelService.createPublicChannel(publicChannelRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(publicChannel);
   }
 
   @PostMapping("/private")
@@ -49,20 +47,15 @@ public class ChannelController implements ChannelControllerDocs {
     if (privateChannelRequest.participantIds().isEmpty()) {
       return ResponseEntity.badRequest().build();
     }
-    Channel privateChannel = channelService.
+    ChannelResponse privateChannel = channelService.
         createPrivateChannel(privateChannelRequest.participantIds());
-    return ResponseEntity.created(URI.create("channels/" + privateChannel.getId()))
-        .body(channelMapper.toDto(privateChannel));
+    return ResponseEntity.status(HttpStatus.CREATED).body(privateChannel);
   }
 
   @GetMapping
   @Override
   public ResponseEntity<List<ChannelResponse>> getChannels(@RequestParam UUID userId) {
-    List<Channel> channels = channelService.readAllByUserId(userId);
-    List<ChannelResponse> responses = channels.stream()
-        .map(channelMapper::toDto)
-        .toList();
-    return ResponseEntity.ok(responses);
+    return ResponseEntity.ok(channelService.readAllByUserId(userId));
   }
 
   @PatchMapping("/{id}")
@@ -71,8 +64,8 @@ public class ChannelController implements ChannelControllerDocs {
       @PathVariable UUID id,
       @RequestBody PublicChannelUpdateRequest updateRequest
   ) {
-    Channel channel = channelService.updateChannel(id, updateRequest);
-    return ResponseEntity.ok().body(channelMapper.toDto(channel));
+    ChannelResponse channel = channelService.updateChannel(id, updateRequest);
+    return ResponseEntity.ok().body(channel);
   }
 
   @DeleteMapping("/{id}")

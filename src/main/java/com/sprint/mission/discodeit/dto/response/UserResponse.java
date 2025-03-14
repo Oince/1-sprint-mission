@@ -1,8 +1,6 @@
 package com.sprint.mission.discodeit.dto.response;
 
-import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import java.util.Optional;
 import java.util.UUID;
 
 public record UserResponse(
@@ -13,12 +11,7 @@ public record UserResponse(
     boolean online
 ) {
 
-  public static UserResponse from(User user) {
-    Optional<BinaryContent> optionalContent = user.getProfile();
-    BinaryContentResponse profile = null;
-    if (optionalContent.isPresent()) {
-      profile = BinaryContentResponse.from(optionalContent.get());
-    }
+  public static UserResponse of(User user, BinaryContentResponse profile) {
     return new UserResponse(
         user.getId(),
         user.getUsername(),
@@ -27,4 +20,5 @@ public record UserResponse(
         user.getStatus().isOnline()
     );
   }
+
 }

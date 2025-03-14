@@ -6,15 +6,14 @@ import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.MessageResponse;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,9 +42,9 @@ public class MessageController implements MessageControllerDocs {
       @RequestPart(required = false) List<MultipartFile> attachments
   ) {
     List<BinaryContent> binaryContents = binaryContentService.create(attachments);
-    Message message = messageService.createMessage(messageCreateRequest, binaryContents);
-    return ResponseEntity.created(URI.create("messages/" + message.getId()))
-        .body(MessageResponse.from(message));
+    MessageResponse messageResponse = messageService.createMessage(messageCreateRequest,
+        binaryContents);
+    return ResponseEntity.status(HttpStatus.CREATED).body(messageResponse);
   }
 
   @GetMapping("/{id}")
@@ -53,8 +52,7 @@ public class MessageController implements MessageControllerDocs {
   public ResponseEntity<MessageResponse> getMessage(
       @PathVariable UUID id
   ) {
-    Message message = messageService.readMessage(id);
-    return ResponseEntity.ok(MessageResponse.from(message));
+    return ResponseEntity.ok(messageService.readMessage(id));
   }
 
   @GetMapping
@@ -63,8 +61,7 @@ public class MessageController implements MessageControllerDocs {
       @RequestParam UUID channelId,
       Pageable pageable
   ) {
-    Page<MessageResponse> responses = messageService.readAllByChannelId(channelId, pageable)
-        .map(MessageResponse::from);
+    Page<MessageResponse> responses = messageService.readAllByChannelId(channelId, pageable);
     return ResponseEntity.ok(PageResponse.fromPage(responses));
   }
 
@@ -74,8 +71,9 @@ public class MessageController implements MessageControllerDocs {
       @PathVariable UUID id,
       @RequestBody MessageUpdateRequest messageUpdateRequest
   ) {
-    Message message = messageService.updateMessage(id, messageUpdateRequest.newContent());
-    return ResponseEntity.ok(MessageResponse.from(message));
+    MessageResponse messageResponse = messageService.updateMessage(id,
+        messageUpdateRequest.newContent());
+    return ResponseEntity.ok(messageResponse);
   }
 
   @DeleteMapping("/{id}")

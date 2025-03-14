@@ -7,14 +7,13 @@ import com.sprint.mission.discodeit.dto.request.UserUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.BinaryContentService;
-import com.sprint.mission.discodeit.service.UserStatusService;
 import com.sprint.mission.discodeit.service.UserService;
-import java.net.URI;
+import com.sprint.mission.discodeit.service.UserStatusService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,28 +45,14 @@ public class UserController implements UserControllerDocs {
     if (profile != null) {
       content = binaryContentService.create(profile);
     }
-    User user = userService.createUser(userCreateRequest, content);
-    userStatusService.create(user);
-
-    return ResponseEntity.created(URI.create("/users/" + user.getId()))
-        .body(UserResponse.from(user));
+    UserResponse userResponse = userService.createUser(userCreateRequest, content);
+    return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
   }
 
   @GetMapping
   @Override
   public ResponseEntity<List<UserResponse>> getUsers() {
-    List<User> users = userService.readAll();
-    List<UserResponse> userResponses = users.stream()
-        .map(UserResponse::from)
-        .toList();
-    return ResponseEntity.ok(userResponses);
-  }
-
-  @GetMapping("/{id}")
-  @Override
-  public ResponseEntity<UserResponse> getUser(@PathVariable UUID id) {
-    User user = userService.readUser(id);
-    return ResponseEntity.ok(UserResponse.from(user));
+    return ResponseEntity.ok(userService.readAll());
   }
 
   @PatchMapping("/{id}")
@@ -81,8 +66,8 @@ public class UserController implements UserControllerDocs {
     if (profile != null) {
       content = binaryContentService.create(profile);
     }
-    User user = userService.updateUser(id, userUpdateRequest, content);
-    return ResponseEntity.ok().body(UserResponse.from(user));
+    UserResponse userResponse = userService.updateUser(id, userUpdateRequest, content);
+    return ResponseEntity.ok().body(userResponse);
   }
 
   @PatchMapping("/{id}/userStatus")
@@ -91,10 +76,9 @@ public class UserController implements UserControllerDocs {
       @PathVariable UUID id,
       @RequestBody UserStatusUpdateRequest userStatusUpdateRequest
   ) {
-    User user = userService.readUser(id);
-    UserStatusResponse response = userStatusService
-        .update(user, userStatusUpdateRequest.newLastActiveAt());
-    return ResponseEntity.ok().body(response);
+    UserStatusResponse userStatusResponse = userStatusService
+        .update(id, userStatusUpdateRequest.newLastActiveAt());
+    return ResponseEntity.ok().body(userStatusResponse);
   }
 
   @DeleteMapping("/{id}")

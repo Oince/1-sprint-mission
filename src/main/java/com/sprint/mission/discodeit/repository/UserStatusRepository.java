@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.repository;
 
-import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import java.util.List;
 import java.util.Optional;
@@ -13,12 +12,10 @@ public interface UserStatusRepository extends JpaRepository<UserStatus, UUID> {
 
   @Query("SELECT status from UserStatus status "
       + "JOIN FETCH status.user "
-      + "WHERE status.user = :user")
-  Optional<UserStatus> findByUser(@Param("user") User user);
+      + "WHERE status.user.id = :userId")
+  Optional<UserStatus> findByUser_Id(@Param("userId") UUID userId);
 
   @Query("SELECT status FROM UserStatus status "
       + "JOIN FETCH status.user")
   List<UserStatus> findAllWithUser();
-
-  boolean existsByUser(User user);
 }

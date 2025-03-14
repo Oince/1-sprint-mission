@@ -2,12 +2,14 @@ package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
+import com.sprint.mission.discodeit.dto.response.ChannelResponse;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Channel.Type;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.exception.ModificationNowAllowedException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ChannelService {
 
   private final UserRepository userRepository;
@@ -29,21 +32,24 @@ public class ChannelService {
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
+  private final ChannelMapper channelMapper;
 
   @Transactional
-  public Channel createPrivateChannel(List<UUID> userIds) {
+  public ChannelResponse createPrivateChannel(List<UUID> userIds) {
     Channel channel = channelRepository.save(Channel.create(Channel.Type.PRIVATE, null, null));
     userIds.stream()
         .map(userRepository::findById)
         .map(user -> user.orElseThrow(() -> new NotFoundException("등록되지 않은 user.")))
         .forEach(user -> readStatusRepository.save(ReadStatus.create(user, channel)));
-    return channel;
+    return channelMapper.toDto(channel);
   }
 
   @Transactional
-  public Channel createPublicChannel(PublicChannelRequest publicChannelRequest) {
-    return channelRepository.save(Channel.create(Channel.Type.PUBLIC, publicChannelRequest.name(),
-        publicChannelRequest.description()));
+  public ChannelResponse createPublicChannel(PublicChannelRequest publicChannelRequest) {
+    Channel channel = channelRepository
+        .save(Channel.create(Type.PUBLIC, publicChannelRequest.name(),
+            publicChannelRequest.description()));
+    return channelMapper.toDto(channel);
   }
 
   public Channel readChannel(UUID channelId) {
@@ -51,7 +57,7 @@ public class ChannelService {
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
   }
 
-  public List<Channel> readAllByUserId(UUID userId) {
+  public List<ChannelResponse> readAllByUserId(UUID userId) {
     if (!userRepository.existsById(userId)) {
       throw new NotFoundException("등록되지 않은 user. id=" + userId);
     }
@@ -64,11 +70,12 @@ public class ChannelService {
     return channelRepository.findAll().stream()
         .filter(channel -> channel.getType() == Type.PUBLIC ||
             subscribedChannelIds.contains(channel.getId()))
+        .map(channelMapper::toDto)
         .toList();
   }
 
   @Transactional
-  public Channel updateChannel(UUID channelId, PublicChannelUpdateRequest updateRequest) {
+  public ChannelResponse updateChannel(UUID channelId, PublicChannelUpdateRequest updateRequest) {
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
     if (channel.getType() == Channel.Type.PRIVATE) {
@@ -77,7 +84,8 @@ public class ChannelService {
 
     channel.updateName(updateRequest.newName());
     channel.updateDescription(updateRequest.newDescription());
-    return channelRepository.save(channel);
+    channelRepository.save(channel);
+    return channelMapper.toDto(channel);
   }
 
   @Transactional

@@ -15,16 +15,14 @@ public record MessageResponse(
     List<BinaryContentResponse> attachments
 ) {
 
-  public static MessageResponse from(Message message) {
-    List<BinaryContentResponse> attachments = message.getAttachments().stream()
-        .map(BinaryContentResponse::from)
-        .toList();
+  public static MessageResponse of(Message message, UserResponse userResponse,
+      List<BinaryContentResponse> attachments) {
     return new MessageResponse(
         message.getId(),
         message.getCreatedAt(),
         message.getUpdatedAt(),
         message.getContent(),
-        UserResponse.from(message.getAuthor()),
+        userResponse,
         message.getChannel().getId(),
         attachments
     );

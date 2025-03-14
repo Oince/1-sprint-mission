@@ -42,13 +42,6 @@ public interface UserControllerDocs {
   @GetMapping
   ResponseEntity<List<UserResponse>> getUsers();
 
-  @Operation(summary = "유저 조회")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "유저 조회 성공")
-  })
-  @GetMapping("/{id}")
-  ResponseEntity<UserResponse> getUser(@PathVariable UUID id);
-
   @Operation(summary = "유저 수정")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "유저 수정 성공"),

@@ -1,11 +1,13 @@
 package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
+import com.sprint.mission.discodeit.dto.response.MessageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MessageService {
 
   private final UserRepository userRepository;
@@ -28,9 +31,10 @@ public class MessageService {
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
+  private final MessageMapper messageMapper;
 
   @Transactional
-  public Message createMessage(MessageCreateRequest messageCreateRequest,
+  public MessageResponse createMessage(MessageCreateRequest messageCreateRequest,
       List<BinaryContent> attachments) {
     UUID authorId = messageCreateRequest.authorId();
     UUID channelId = messageCreateRequest.channelId();
@@ -47,25 +51,28 @@ public class MessageService {
     }
 
     Message message = Message.create(user, messageCreateRequest.content(), channel, attachments);
-    return messageRepository.save(message);
+    messageRepository.save(message);
+    return messageMapper.toDto(message);
   }
 
-  public Message readMessage(UUID messageId) {
-    return messageRepository.findById(messageId)
+  public MessageResponse readMessage(UUID messageId) {
+    Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
+    return messageMapper.toDto(message);
   }
 
-  public Page<Message> readAllByChannelId(UUID channelId, Pageable pageable) {
-    return messageRepository.findPageByChannel_Id(channelId, pageable);
+  public Page<MessageResponse> readAllByChannelId(UUID channelId, Pageable pageable) {
+    return messageRepository.findPageByChannel_Id(channelId, pageable)
+        .map(messageMapper::toDto);
   }
 
   @Transactional
-  public Message updateMessage(UUID messageId, String content) {
+  public MessageResponse updateMessage(UUID messageId, String content) {
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
     message.updateContent(content);
     messageRepository.save(message);
-    return message;
+    return messageMapper.toDto(message);
   }
 
   @Transactional

@@ -30,7 +30,7 @@ public class ChannelMapper {
 
     List<UserResponse> participants = readStatusRepository.findByChannel(channel).stream()
         .map(ReadStatus::getUser)
-        .map(UserResponse::from)
+        .map(userMapper::toDto)
         .toList();
 
     return ChannelResponse.of(channel, latestMessageTime, participants);

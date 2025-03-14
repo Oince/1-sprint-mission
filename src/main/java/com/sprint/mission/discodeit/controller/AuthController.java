@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.docs.AuthControllerDocs;
 import com.sprint.mission.discodeit.dto.request.UserLoginRequest;
 import com.sprint.mission.discodeit.dto.response.UserResponse;
-import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,7 @@ public class AuthController implements AuthControllerDocs {
   @PostMapping("/login")
   @Override
   public ResponseEntity<UserResponse> login(@RequestBody UserLoginRequest userLoginRequest) {
-    User user = authService.login(userLoginRequest);
-    return ResponseEntity.ok(UserResponse.from(user));
+    UserResponse userResponse = authService.login(userLoginRequest);
+    return ResponseEntity.ok(userResponse);
   }
 }
