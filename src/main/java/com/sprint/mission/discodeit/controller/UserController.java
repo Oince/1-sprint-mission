@@ -8,10 +8,9 @@ import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.entity.UserStatus;
+import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.service.UserStatusService;
 import com.sprint.mission.discodeit.service.UserService;
-import com.sprint.mission.discodeit.service.basic.BinaryContentService;
-import com.sprint.mission.discodeit.service.basic.UserStatusService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -93,9 +92,9 @@ public class UserController implements UserControllerDocs {
       @RequestBody UserStatusUpdateRequest userStatusUpdateRequest
   ) {
     User user = userService.readUser(id);
-    UserStatus userStatus = userStatusService
+    UserStatusResponse response = userStatusService
         .update(user, userStatusUpdateRequest.newLastActiveAt());
-    return ResponseEntity.ok().body(UserStatusResponse.from(userStatus));
+    return ResponseEntity.ok().body(response);
   }
 
   @DeleteMapping("/{id}")

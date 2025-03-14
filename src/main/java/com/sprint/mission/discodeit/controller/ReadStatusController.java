@@ -5,7 +5,7 @@ import com.sprint.mission.discodeit.dto.request.ReadStatusCreateRequest;
 import com.sprint.mission.discodeit.dto.request.ReadStatusUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.ReadStatusResponse;
 import com.sprint.mission.discodeit.entity.ReadStatus;
-import com.sprint.mission.discodeit.service.basic.ReadStatusService;
+import com.sprint.mission.discodeit.service.ReadStatusService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
