@@ -10,6 +10,7 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: validate
+    open-in-view: false
 
 discodeit:
   storage:
