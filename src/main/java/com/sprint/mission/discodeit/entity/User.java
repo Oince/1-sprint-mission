@@ -72,6 +72,6 @@ public class User extends BaseUpdatableEntity {
   }
 
   public Optional<BinaryContent> getProfile() {
-    return profile == null ? Optional.empty() : Optional.of(profile);
+    return Optional.ofNullable(profile);
   }
 }

@@ -5,21 +5,21 @@ import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@Component
-@RequiredArgsConstructor
-public class UserMapper {
+@Mapper(componentModel = "spring", uses = {BinaryContentMapper.class})
+public abstract class UserMapper {
 
-  private final BinaryContentMapper binaryContentMapper;
+  @Autowired
+  protected BinaryContentMapper binaryContentMapper;
 
-  public UserResponse toDto(User user) {
-    Optional<BinaryContent> optionalContent = user.getProfile();
-    BinaryContentResponse profile = null;
-    if (optionalContent.isPresent()) {
-      profile = binaryContentMapper.toDto(optionalContent.get());
-    }
-    return UserResponse.of(user, profile);
+  @Mapping(source = "profile", target = "profile")
+  @Mapping(source = "status.online", target = "online")
+  public abstract UserResponse toDto(User user);
+
+  protected BinaryContentResponse map(Optional<BinaryContent> optionalProfile) {
+    return optionalProfile.map(binaryContentMapper::toDto).orElse(null);
   }
 }
