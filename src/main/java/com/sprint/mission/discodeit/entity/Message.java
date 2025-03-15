@@ -29,7 +29,7 @@ public class Message extends BaseUpdatableEntity {
   @JoinColumn(name = "channel_id")
   private Channel channel;
 
-  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(cascade = {CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
   @JoinTable(
       name = "message_attachments",
       joinColumns = @JoinColumn(name = "message_id"),

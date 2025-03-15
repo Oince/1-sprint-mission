@@ -82,7 +82,12 @@ public class MessageService {
     }
 
     List<MessageResponse> content = slice.getContent();
-    Instant nextCursor = content.get(content.size() - 1).createdAt();
+    Instant nextCursor;
+    if (content.isEmpty()) {
+      nextCursor = Instant.now();
+    } else {
+      nextCursor = content.get(content.size() - 1).createdAt();
+    }
     return pageResponseMapper.fromSlice(slice, nextCursor);
   }
 
