@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
@@ -36,17 +37,12 @@ public interface MessageControllerDocs {
       @RequestPart(required = false) List<MultipartFile> attachments
   );
 
-  @Operation(summary = "메세지 조회")
-  @GetMapping("/{id}")
-  ResponseEntity<MessageResponse> getMessage(
-      @PathVariable UUID id
-  );
-
   @Operation(summary = "채널의 모든 메세지 조회")
   @ApiResponse(responseCode = "200", description = "메세지 목록 조회 성공")
   @GetMapping
   ResponseEntity<PageResponse<MessageResponse>> getMessages(
       @RequestParam UUID channelId,
+      @RequestParam Instant cursor,
       Pageable pageable
   );
 

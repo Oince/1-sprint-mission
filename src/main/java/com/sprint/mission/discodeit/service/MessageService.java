@@ -2,22 +2,26 @@ package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.response.MessageResponse;
+import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
+import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +36,7 @@ public class MessageService {
   private final ReadStatusRepository readStatusRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final MessageMapper messageMapper;
+  private final PageResponseMapper pageResponseMapper;
 
   @Transactional
   public MessageResponse createMessage(MessageCreateRequest messageCreateRequest,
@@ -61,9 +66,24 @@ public class MessageService {
     return messageMapper.toDto(message);
   }
 
-  public Page<MessageResponse> readAllByChannelId(UUID channelId, Pageable pageable) {
-    return messageRepository.findPageByChannel_Id(channelId, pageable)
-        .map(messageMapper::toDto);
+  public PageResponse<MessageResponse> readAllByChannelId(
+      UUID channelId, Instant cursor, Pageable pageable
+  ) {
+    PageRequest pageRequest = PageRequest.of(0, pageable.getPageSize(), pageable.getSort());
+
+    Slice<MessageResponse> slice;
+    if (cursor == null) {
+      slice = messageRepository.findPageByChannel_Id(channelId, pageRequest)
+          .map(messageMapper::toDto);
+    } else {
+      slice = messageRepository
+          .findPageByChannel_IdWithCursor(channelId, cursor, pageRequest)
+          .map(messageMapper::toDto);
+    }
+
+    List<MessageResponse> content = slice.getContent();
+    Instant nextCursor = content.get(content.size() - 1).createdAt();
+    return pageResponseMapper.fromSlice(slice, nextCursor);
   }
 
   @Transactional

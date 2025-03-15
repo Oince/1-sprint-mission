@@ -8,10 +8,10 @@ import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,22 +47,15 @@ public class MessageController implements MessageControllerDocs {
     return ResponseEntity.status(HttpStatus.CREATED).body(messageResponse);
   }
 
-  @GetMapping("/{id}")
-  @Override
-  public ResponseEntity<MessageResponse> getMessage(
-      @PathVariable UUID id
-  ) {
-    return ResponseEntity.ok(messageService.readMessage(id));
-  }
-
   @GetMapping
   @Override
   public ResponseEntity<PageResponse<MessageResponse>> getMessages(
       @RequestParam UUID channelId,
+      @RequestParam(required = false) Instant cursor,
       Pageable pageable
   ) {
-    Page<MessageResponse> responses = messageService.readAllByChannelId(channelId, pageable);
-    return ResponseEntity.ok(PageResponse.fromPage(responses));
+    return ResponseEntity
+        .ok(messageService.readAllByChannelId(channelId, cursor, pageable));
   }
 
   @PatchMapping("/{id}")
