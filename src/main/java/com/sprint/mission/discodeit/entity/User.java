@@ -1,59 +1,78 @@
 package com.sprint.mission.discodeit.entity;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
-
+@Entity
+@Table(name = "users")
 @Getter
-@ToString
-@Builder(access = AccessLevel.PRIVATE)
-public class User implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User extends BaseUpdatableEntity {
 
-  private static final long serialVersionUID = 1L;
-
-  private final UUID id;
-  private final Instant createdAt;
-  private Instant updatedAt;
-
+  @Column(nullable = false, unique = true)
   private String username;
-  private String email;
-  private String password;
-  private UUID profileId;
 
-  public static User of(String username, String email, String password) {
-    Instant now = Instant.now();
+  @Column(nullable = false, unique = true)
+  private String email;
+
+  @Column(nullable = false)
+  private String password;
+
+  @OneToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE,
+      CascadeType.REMOVE}, orphanRemoval = true)
+  @JoinColumn(name = "profile_id")
+  private BinaryContent profile;
+
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private UserStatus status;
+
+  @Builder(access = AccessLevel.PRIVATE)
+  private User(String username, String email, String password) {
+    this.username = username;
+    this.email = email;
+    this.password = password;
+  }
+
+  public static User create(String username, String email, String password) {
     return User.builder()
-        .id(UUID.randomUUID())
-        .createdAt(now)
-        .updatedAt(now)
         .username(username)
         .email(email)
         .password(password)
         .build();
   }
 
+  protected void setUserStatus(UserStatus status) {
+    this.status = status;
+  }
+
   public void updateEmail(String email) {
     this.email = email;
-    updatedAt = Instant.now();
   }
 
   public void updatePassword(String password) {
     this.password = password;
-    updatedAt = Instant.now();
   }
 
   public void updateName(String username) {
     this.username = username;
-    updatedAt = Instant.now();
   }
 
-  public void updateProfile(UUID profileId) {
-    this.profileId = profileId;
-    updatedAt = Instant.now();
+  public void updateProfile(BinaryContent profile) {
+    this.profile = profile;
+  }
+
+  public Optional<BinaryContent> getProfile() {
+    return Optional.ofNullable(profile);
   }
 }

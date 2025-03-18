@@ -2,9 +2,9 @@ package com.sprint.mission.discodeit.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class PrivateChannelModificationException extends ExpectedException {
+public class ModificationNowAllowedException extends ExpectedException {
 
-  public PrivateChannelModificationException(String message) {
+  public ModificationNowAllowedException(String message) {
     super(HttpStatus.BAD_REQUEST, message);
   }
 }

@@ -1,36 +1,54 @@
 package com.sprint.mission.discodeit.entity;
 
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.UUID;
-
+@Entity
+@Table(name = "read_statuses", uniqueConstraints = {
+    @UniqueConstraint(
+        name = "read_statuses_user_id_channel_id_key",
+        columnNames = {
+            "user_id", "channel_id"
+        }
+    )
+})
 @Getter
-@Builder(access = AccessLevel.PRIVATE)
-public class ReadStatus implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ReadStatus extends BaseUpdatableEntity {
 
-  private static final long serialVersionUID = 1L;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id")
+  private User user;
 
-  private final UUID id;
-  private final Instant createdAt;
-  private Instant updateAt;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "channel_id")
+  private Channel channel;
 
-  private UUID userId;
-  private UUID channelId;
+  @Column(nullable = false)
   private Instant lastReadAt;
 
-  public static ReadStatus of(UUID userId, UUID channelId) {
-    Instant now = Instant.now();
+  @Builder(access = AccessLevel.PRIVATE)
+  private ReadStatus(User user, Channel channel) {
+    this.user = user;
+    this.channel = channel;
+    this.lastReadAt = Instant.now();
+  }
+
+  public static ReadStatus create(User user, Channel channel) {
     return ReadStatus.builder()
-        .id(UUID.randomUUID())
-        .createdAt(now)
-        .updateAt(now)
-        .userId(userId)
-        .channelId(channelId)
-        .lastReadAt(now)
+        .user(user)
+        .channel(channel)
         .build();
   }
 

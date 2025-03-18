@@ -46,7 +46,7 @@ public interface ReadStatusControllerDocs {
       @ApiResponse(responseCode = "404", description = "readStatus를 찾을 수 없음")
   })
   @PatchMapping("/{id}")
-  ResponseEntity<Void> update(
+  ResponseEntity<ReadStatusResponse> update(
       @PathVariable UUID id,
       @RequestBody ReadStatusUpdateRequest readStatusUpdateRequest
   );

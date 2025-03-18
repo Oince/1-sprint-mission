@@ -3,7 +3,6 @@ package com.sprint.mission.discodeit.docs;
 import com.sprint.mission.discodeit.dto.request.PrivateChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
-import com.sprint.mission.discodeit.dto.response.ChannelDetailResponse;
 import com.sprint.mission.discodeit.dto.response.ChannelResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,7 +25,7 @@ public interface ChannelControllerDocs {
   @Operation(summary = "퍼블릭 채널 생성")
   @ApiResponse(responseCode = "201", description = "퍼블릭 채널 생성")
   @PostMapping("/public")
-  ResponseEntity<ChannelResponse> createChannel(
+  ResponseEntity<ChannelResponse> createPublicChannel(
       @RequestBody PublicChannelRequest publicChannelRequest
   );
 
@@ -40,7 +39,7 @@ public interface ChannelControllerDocs {
   @Operation(summary = "채널 조회")
   @ApiResponse(responseCode = "200", description = "채널 목록 조회 성공")
   @GetMapping
-  ResponseEntity<List<ChannelDetailResponse>> getChannels(
+  ResponseEntity<List<ChannelResponse>> getChannels(
       @RequestParam UUID userId
   );
 
@@ -54,20 +53,6 @@ public interface ChannelControllerDocs {
   ResponseEntity<ChannelResponse> updatePublicChannel(
       @PathVariable UUID id,
       @RequestBody PublicChannelUpdateRequest updateRequest
-  );
-
-  @Operation(summary = "채널에 유저 추가")
-  @PatchMapping("/{id}/users/{userId}")
-  ResponseEntity<Void> addUser(
-      @PathVariable UUID id,
-      @PathVariable UUID userId
-  );
-
-  @Operation(summary = "채널의 유저 삭제")
-  @DeleteMapping("/{id}/users/{userId}")
-  ResponseEntity<Void> deleteUser(
-      @PathVariable UUID id,
-      @PathVariable UUID userId
   );
 
   @Operation(summary = "채널 삭제")
