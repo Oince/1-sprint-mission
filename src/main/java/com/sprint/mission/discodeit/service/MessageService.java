@@ -99,11 +99,11 @@ public class MessageService {
 
     Slice<MessageResponse> slice;
     if (cursor == null) {
-      slice = messageRepository.findPageByChannel_Id(channelId, pageRequest)
+      slice = messageRepository.findPageByChannelId(channelId, pageRequest)
           .map(messageMapper::toDto);
     } else {
       slice = messageRepository
-          .findPageByChannel_IdWithCursor(channelId, cursor, pageRequest)
+          .findPageByChannelIdWithCursor(channelId, cursor, pageRequest)
           .map(messageMapper::toDto);
     }
 

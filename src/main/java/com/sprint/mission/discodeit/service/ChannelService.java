@@ -62,7 +62,7 @@ public class ChannelService {
       throw new NotFoundException("등록되지 않은 user. id=" + userId);
     }
 
-    List<UUID> subscribedChannelIds = readStatusRepository.findByUser_Id(userId).stream()
+    List<UUID> subscribedChannelIds = readStatusRepository.findByUserId(userId).stream()
         .map(ReadStatus::getChannel)
         .map(Channel::getId)
         .toList();
@@ -95,7 +95,7 @@ public class ChannelService {
       return;
     }
     Channel channel = optionalChannel.get();
-    List<Message> messages = messageRepository.findByChannel_IdWithAttachments(channelId);
+    List<Message> messages = messageRepository.findByChannelIdWithAttachments(channelId);
 
     for (Message message : messages) {
       message.getAttachments()

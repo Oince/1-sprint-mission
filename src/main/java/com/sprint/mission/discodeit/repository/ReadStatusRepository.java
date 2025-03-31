@@ -14,7 +14,7 @@ public interface ReadStatusRepository extends JpaRepository<ReadStatus, UUID> {
       + "JOIN FETCH rs.channel "
       + "JOIN FETCH rs.user "
       + "WHERE rs.user.id = :userId")
-  List<ReadStatus> findByUser_Id(@Param("userId") UUID userId);
+  List<ReadStatus> findByUserId(@Param("userId") UUID userId);
 
   List<ReadStatus> findByChannel(Channel channel);
 

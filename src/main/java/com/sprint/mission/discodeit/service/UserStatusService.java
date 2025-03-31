@@ -22,7 +22,7 @@ public class UserStatusService {
 
   @Transactional
   public UserStatusResponse update(UUID userId, Instant lastActiveAt) {
-    UserStatus userStatus = userStatusRepository.findByUser_Id(userId)
+    UserStatus userStatus = userStatusRepository.findByUserId(userId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 user에 대한 userStatus 접근"));
     userStatus.updateLastActiveAt(lastActiveAt);
     userStatusRepository.save(userStatus);

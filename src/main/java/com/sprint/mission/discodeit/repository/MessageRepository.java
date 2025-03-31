@@ -21,7 +21,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
   @Query("SELECT m FROM Message m "
       + "LEFT JOIN FETCH m.attachments "
       + "WHERE m.channel.id = :channelId")
-  List<Message> findByChannel_IdWithAttachments(@Param("channelId") UUID channelId);
+  List<Message> findByChannelIdWithAttachments(@Param("channelId") UUID channelId);
 
   List<Message> findByChannel_Id(UUID channelId);
 
@@ -32,7 +32,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
       + "WHERE m.channel.id = :channelId "
       + "AND m.createdAt < :cursor "
       + "ORDER BY m.createdAt DESC ")
-  Slice<Message> findPageByChannel_IdWithCursor(
+  Slice<Message> findPageByChannelIdWithCursor(
       @Param("channelId") UUID channelId,
       @Param("cursor") Instant cursor,
       Pageable pageable
@@ -43,7 +43,7 @@ public interface MessageRepository extends JpaRepository<Message, UUID> {
       + "JOIN FETCH m.author "
       + "LEFT JOIN FETCH m.attachments "
       + "WHERE m.channel.id = :channelId ")
-  Slice<Message> findPageByChannel_Id(
+  Slice<Message> findPageByChannelId(
       @Param("channelId") UUID channelId,
       Pageable pageable
   );

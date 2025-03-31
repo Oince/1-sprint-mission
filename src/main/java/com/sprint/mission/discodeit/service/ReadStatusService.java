@@ -55,7 +55,7 @@ public class ReadStatusService {
     if (!userRepository.existsById(userId)) {
       return Collections.emptyList();
     } else {
-      return readStatusRepository.findByUser_Id(userId).stream()
+      return readStatusRepository.findByUserId(userId).stream()
           .map(readStatusMapper::toDto)
           .toList();
     }

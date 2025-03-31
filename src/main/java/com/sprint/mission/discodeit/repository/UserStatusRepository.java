@@ -13,7 +13,7 @@ public interface UserStatusRepository extends JpaRepository<UserStatus, UUID> {
   @Query("SELECT status from UserStatus status "
       + "JOIN FETCH status.user "
       + "WHERE status.user.id = :userId")
-  Optional<UserStatus> findByUser_Id(@Param("userId") UUID userId);
+  Optional<UserStatus> findByUserId(@Param("userId") UUID userId);
 
   @Query("SELECT status FROM UserStatus status "
       + "JOIN FETCH status.user")
