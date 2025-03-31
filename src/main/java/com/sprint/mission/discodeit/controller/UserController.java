@@ -41,11 +41,7 @@ public class UserController implements UserControllerDocs {
       @RequestPart UserCreateRequest userCreateRequest,
       @RequestPart(required = false) MultipartFile profile
   ) {
-    BinaryContent content = null;
-    if (profile != null) {
-      content = binaryContentService.create(profile);
-    }
-    UserResponse userResponse = userService.createUser(userCreateRequest, content);
+    UserResponse userResponse = userService.createUser(userCreateRequest, profile);
     return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
   }
 

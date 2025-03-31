@@ -7,15 +7,19 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.exception.FileIOException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -34,13 +39,14 @@ public class MessageService {
   private final ChannelRepository channelRepository;
   private final MessageRepository messageRepository;
   private final ReadStatusRepository readStatusRepository;
+  private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final MessageMapper messageMapper;
   private final PageResponseMapper pageResponseMapper;
 
   @Transactional
   public MessageResponse createMessage(MessageCreateRequest messageCreateRequest,
-      List<BinaryContent> attachments) {
+      List<MultipartFile> attachments) {
     UUID authorId = messageCreateRequest.authorId();
     UUID channelId = messageCreateRequest.channelId();
 
@@ -55,7 +61,27 @@ public class MessageService {
       }
     }
 
-    Message message = Message.create(user, messageCreateRequest.content(), channel, attachments);
+    List<BinaryContent> contents = new ArrayList<>();
+    if (attachments != null) {
+      contents = attachments.stream()
+          .map(attachment -> {
+            long size = attachment.getSize();
+            String fileName = attachment.getOriginalFilename();
+            String contentType = fileName.substring(fileName.lastIndexOf('.'));
+
+            BinaryContent content = binaryContentRepository
+                .save(BinaryContent.create(size, fileName, contentType));
+            try {
+              binaryContentStorage.put(content.getId(), attachment.getBytes());
+            } catch (IOException e) {
+              throw new FileIOException("파일 생성 실패");
+            }
+            return content;
+          })
+          .toList();
+    }
+
+    Message message = Message.create(user, messageCreateRequest.content(), channel, contents);
     messageRepository.save(message);
     return messageMapper.toDto(message);
   }

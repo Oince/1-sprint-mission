@@ -7,16 +7,20 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
 import com.sprint.mission.discodeit.exception.DuplicateException;
+import com.sprint.mission.discodeit.exception.FileIOException;
 import com.sprint.mission.discodeit.exception.NotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
+import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -25,18 +29,31 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final UserStatusRepository userStatusRepository;
+  private final BinaryContentRepository binaryContentRepository;
   private final BinaryContentStorage binaryContentStorage;
   private final UserMapper userMapper;
 
   @Transactional
-  public UserResponse createUser(UserCreateRequest userCreateRequest, BinaryContent binaryContent) {
+  public UserResponse createUser(UserCreateRequest userCreateRequest, MultipartFile profile) {
     duplicationCheck(userCreateRequest.username(), userCreateRequest.email());
 
     User newUser = User.create(userCreateRequest.username(), userCreateRequest.email(),
         userCreateRequest.password());
-    if (binaryContent != null) {
-      newUser.updateProfile(binaryContent);
+    BinaryContent content = null;
+    if (profile != null && !profile.isEmpty()) {
+      long size = profile.getSize();
+      String fileName = profile.getOriginalFilename();
+      String contentType = fileName.substring(fileName.lastIndexOf('.'));
+
+      content = binaryContentRepository
+          .save(BinaryContent.create(size, fileName, contentType));
+      try {
+        binaryContentStorage.put(content.getId(), profile.getBytes());
+      } catch (IOException e) {
+        throw new FileIOException("파일 생성 실패");
+      }
     }
+    newUser.updateProfile(content);
     userRepository.save(newUser);
     userStatusRepository.save(UserStatus.create(newUser));
 

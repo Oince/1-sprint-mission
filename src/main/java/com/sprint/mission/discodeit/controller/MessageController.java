@@ -5,7 +5,6 @@ import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.MessageResponse;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
-import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.time.Instant;
@@ -41,9 +40,8 @@ public class MessageController implements MessageControllerDocs {
       @RequestPart MessageCreateRequest messageCreateRequest,
       @RequestPart(required = false) List<MultipartFile> attachments
   ) {
-    List<BinaryContent> binaryContents = binaryContentService.create(attachments);
     MessageResponse messageResponse = messageService.createMessage(messageCreateRequest,
-        binaryContents);
+        attachments);
     return ResponseEntity.status(HttpStatus.CREATED).body(messageResponse);
   }
 
