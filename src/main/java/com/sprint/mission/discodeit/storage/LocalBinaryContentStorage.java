@@ -37,9 +37,13 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
   }
 
   @Override
-  public UUID put(UUID id, byte[] data) throws IOException {
+  public UUID put(UUID id, byte[] data) {
     Path path = resolvePath(id);
-    Files.write(path, data);
+    try {
+      Files.write(path, data);
+    } catch (IOException e) {
+      throw new FileIOException("파일 생성 실패: " + path);
+    }
     return id;
   }
 
