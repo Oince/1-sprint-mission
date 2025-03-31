@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,4 +31,11 @@ public interface BinaryContentControllerDocs {
   @GetMapping
   ResponseEntity<List<BinaryContentResponse>> getBinaryContents(
       @RequestParam List<UUID> binaryContentIds);
+
+  @Operation(summary = "파일 다운로드")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "파일 다운로드 성공")
+  })
+  @GetMapping("/{id}/download")
+  ResponseEntity<Resource> getFile(@PathVariable UUID id);
 }
