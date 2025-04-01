@@ -5,12 +5,12 @@ import com.sprint.mission.discodeit.dto.request.MessageCreateRequest;
 import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.MessageResponse;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
-import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.service.MessageService;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +26,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/messages")
 public class MessageController implements MessageControllerDocs {
 
   private final MessageService messageService;
-  private final BinaryContentService binaryContentService;
 
   @PostMapping
   @Override
@@ -40,6 +40,7 @@ public class MessageController implements MessageControllerDocs {
       @RequestPart MessageCreateRequest messageCreateRequest,
       @RequestPart(required = false) List<MultipartFile> attachments
   ) {
+    log.debug("POST /api/messages");
     MessageResponse messageResponse = messageService.createMessage(messageCreateRequest,
         attachments);
     return ResponseEntity.status(HttpStatus.CREATED).body(messageResponse);
@@ -52,6 +53,7 @@ public class MessageController implements MessageControllerDocs {
       @RequestParam(required = false) Instant cursor,
       Pageable pageable
   ) {
+    log.debug("GET /api/messages");
     return ResponseEntity
         .ok(messageService.readAllByChannelId(channelId, cursor, pageable));
   }
@@ -62,6 +64,7 @@ public class MessageController implements MessageControllerDocs {
       @PathVariable UUID id,
       @RequestBody MessageUpdateRequest messageUpdateRequest
   ) {
+    log.debug("PATCH /api/messages/{}", id);
     MessageResponse messageResponse = messageService.updateMessage(id,
         messageUpdateRequest.newContent());
     return ResponseEntity.ok(messageResponse);
@@ -72,6 +75,7 @@ public class MessageController implements MessageControllerDocs {
   public ResponseEntity<Void> deleteMessage(
       @PathVariable UUID id
   ) {
+    log.debug("DELETE /api/messages/{}", id);
     messageService.deleteMessage(id);
     return ResponseEntity.noContent().build();
   }

@@ -19,9 +19,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,7 +38,9 @@ public class ChannelService {
 
   @Transactional
   public ChannelResponse createPrivateChannel(List<UUID> userIds) {
+    log.debug("createPrivateChannel() 호출");
     Channel channel = channelRepository.save(Channel.create(Channel.Type.PRIVATE, null, null));
+    log.info("Private Channel 생성. id: {}", channel.getId());
     userIds.stream()
         .map(userRepository::findById)
         .map(user -> user.orElseThrow(() -> new NotFoundException("등록되지 않은 user.")))
@@ -46,18 +50,16 @@ public class ChannelService {
 
   @Transactional
   public ChannelResponse createPublicChannel(PublicChannelRequest publicChannelRequest) {
+    log.debug("createPublicChannel() 호출");
     Channel channel = channelRepository
         .save(Channel.create(Type.PUBLIC, publicChannelRequest.name(),
             publicChannelRequest.description()));
+    log.info("Public Channel 생성. id: {}", channel.getId());
     return channelMapper.toDto(channel);
   }
 
-  public Channel readChannel(UUID channelId) {
-    return channelRepository.findById(channelId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
-  }
-
   public List<ChannelResponse> readAllByUserId(UUID userId) {
+    log.debug("readAllByUserId() 호출");
     if (!userRepository.existsById(userId)) {
       throw new NotFoundException("등록되지 않은 user. id=" + userId);
     }
@@ -76,6 +78,7 @@ public class ChannelService {
 
   @Transactional
   public ChannelResponse updateChannel(UUID channelId, PublicChannelUpdateRequest updateRequest) {
+    log.debug("updateChannel() 호출");
     Channel channel = channelRepository.findById(channelId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
     if (channel.getType() == Channel.Type.PRIVATE) {
@@ -84,12 +87,15 @@ public class ChannelService {
 
     channel.updateName(updateRequest.newName());
     channel.updateDescription(updateRequest.newDescription());
+
+    log.info("Channel 수정. id: {}", channel.getId());
     channelRepository.save(channel);
     return channelMapper.toDto(channel);
   }
 
   @Transactional
   public void deleteChannel(UUID channelId) {
+    log.debug("deleteChannel() 호출");
     Optional<Channel> optionalChannel = channelRepository.findById(channelId);
     if (optionalChannel.isEmpty()) {
       return;
@@ -104,6 +110,8 @@ public class ChannelService {
     }
 
     readStatusRepository.deleteByChannel(channel);
+
+    log.info("Channel 삭제. id: {}", channelId);
     channelRepository.delete(channel);
   }
 }

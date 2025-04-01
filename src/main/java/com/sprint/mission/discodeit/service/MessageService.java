@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,6 +49,7 @@ public class MessageService {
   @Transactional
   public MessageResponse createMessage(MessageCreateRequest messageCreateRequest,
       List<MultipartFile> attachments) {
+    log.debug("createMessage() 호출");
     UUID authorId = messageCreateRequest.authorId();
     UUID channelId = messageCreateRequest.channelId();
 
@@ -83,18 +86,14 @@ public class MessageService {
 
     Message message = Message.create(user, messageCreateRequest.content(), channel, contents);
     messageRepository.save(message);
-    return messageMapper.toDto(message);
-  }
-
-  public MessageResponse readMessage(UUID messageId) {
-    Message message = messageRepository.findById(messageId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
+    log.info("Message 생성. id: {}", message.getId());
     return messageMapper.toDto(message);
   }
 
   public PageResponse<MessageResponse> readAllByChannelId(
       UUID channelId, Instant cursor, Pageable pageable
   ) {
+    log.debug("readAllByChannelId() 호출");
     PageRequest pageRequest = PageRequest.of(0, pageable.getPageSize(), pageable.getSort());
 
     Slice<MessageResponse> slice;
@@ -119,9 +118,12 @@ public class MessageService {
 
   @Transactional
   public MessageResponse updateMessage(UUID messageId, String content) {
+    log.debug("updateMessage() 호출");
     Message message = messageRepository.findById(messageId)
         .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
     message.updateContent(content);
+
+    log.info("Message 수정. id: {}", messageId);
     messageRepository.save(message);
     return messageMapper.toDto(message);
   }
@@ -132,6 +134,7 @@ public class MessageService {
         .ifPresent(message -> {
           message.getAttachments()
               .forEach(attachment -> binaryContentStorage.delete(attachment.getId()));
+          log.info("Message 삭제. id: {}", messageId);
           messageRepository.delete(message);
         });
   }

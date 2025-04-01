@@ -10,6 +10,7 @@ import com.sprint.mission.discodeit.service.ChannelService;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/channels")
@@ -35,6 +37,7 @@ public class ChannelController implements ChannelControllerDocs {
   public ResponseEntity<ChannelResponse> createPublicChannel(
       @RequestBody PublicChannelRequest publicChannelRequest
   ) {
+    log.debug("POST /api/channels/public");
     ChannelResponse publicChannel = channelService.createPublicChannel(publicChannelRequest);
     return ResponseEntity.status(HttpStatus.CREATED).body(publicChannel);
   }
@@ -44,9 +47,7 @@ public class ChannelController implements ChannelControllerDocs {
   public ResponseEntity<ChannelResponse> createPrivateChannel(
       @RequestBody PrivateChannelRequest privateChannelRequest
   ) {
-    if (privateChannelRequest.participantIds().isEmpty()) {
-      return ResponseEntity.badRequest().build();
-    }
+    log.debug("POST /api/channels/private");
     ChannelResponse privateChannel = channelService.
         createPrivateChannel(privateChannelRequest.participantIds());
     return ResponseEntity.status(HttpStatus.CREATED).body(privateChannel);
@@ -55,6 +56,7 @@ public class ChannelController implements ChannelControllerDocs {
   @GetMapping
   @Override
   public ResponseEntity<List<ChannelResponse>> getChannels(@RequestParam UUID userId) {
+    log.debug("GET /api/channels");
     return ResponseEntity.ok(channelService.readAllByUserId(userId));
   }
 
@@ -64,6 +66,7 @@ public class ChannelController implements ChannelControllerDocs {
       @PathVariable UUID id,
       @RequestBody PublicChannelUpdateRequest updateRequest
   ) {
+    log.debug("PATCH /api/channels/{}", id);
     ChannelResponse channel = channelService.updateChannel(id, updateRequest);
     return ResponseEntity.ok().body(channel);
   }
@@ -71,6 +74,7 @@ public class ChannelController implements ChannelControllerDocs {
   @DeleteMapping("/{id}")
   @Override
   public ResponseEntity<Void> deleteChannel(@PathVariable UUID id) {
+    log.debug("DELETE /api/channels/{}", id);
     channelService.deleteChannel(id);
     return ResponseEntity.noContent().build();
   }

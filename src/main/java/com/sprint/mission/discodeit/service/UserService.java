@@ -18,10 +18,12 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -35,38 +37,24 @@ public class UserService {
 
   @Transactional
   public UserResponse createUser(UserCreateRequest userCreateRequest, MultipartFile profile) {
+    log.debug("createUser() 호출");
     duplicationCheck(userCreateRequest.username(), userCreateRequest.email());
 
     User newUser = User.create(userCreateRequest.username(), userCreateRequest.email(),
         userCreateRequest.password());
-    BinaryContent content = null;
-    if (profile != null && !profile.isEmpty()) {
-      long size = profile.getSize();
-      String fileName = profile.getOriginalFilename();
-      String contentType = fileName.substring(fileName.lastIndexOf('.'));
-
-      content = binaryContentRepository
-          .save(BinaryContent.create(size, fileName, contentType));
-      try {
-        binaryContentStorage.put(content.getId(), profile.getBytes());
-      } catch (IOException e) {
-        throw new FileIOException("파일 생성 실패");
-      }
-    }
+    BinaryContent content = createProfile(profile);
     newUser.updateProfile(content);
+
     userRepository.save(newUser);
-    userStatusRepository.save(UserStatus.create(newUser));
+    log.info("User 생성. id: {}", newUser.getId());
+    UserStatus userStatus = userStatusRepository.save(UserStatus.create(newUser));
+    log.info("UserStatus 생성. id: {}", userStatus.getId());
 
     return userMapper.toDto(newUser);
   }
 
-  public UserResponse readUser(UUID userId) {
-    User user = userRepository.findByIdWithProfileAndStatus(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
-    return userMapper.toDto(user);
-  }
-
   public List<UserResponse> readAll() {
+    log.debug("readAll() 호출");
     return userRepository.findAllWithProfileAndStatus().stream()
         .map(userMapper::toDto)
         .toList();
@@ -74,7 +62,8 @@ public class UserService {
 
   @Transactional
   public UserResponse updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
-      BinaryContent binaryContent) {
+      MultipartFile profile) {
+    log.debug("updateUser() 호출");
     String newEmail = userUpdateRequest.newUsername();
     String newUsername = userUpdateRequest.newUsername();
     String newPassword = userUpdateRequest.newPassword();
@@ -96,27 +85,57 @@ public class UserService {
     if (newPassword != null) {
       user.updatePassword(newPassword);
     }
-    if (binaryContent != null) {
+    if (profile != null) {
       user.getProfile().ifPresent(content -> binaryContentStorage.delete(content.getId()));
-      user.updateProfile(binaryContent);
+      BinaryContent content = createProfile(profile);
+      user.updateProfile(content);
     }
 
+    log.info("user 정보 수정. id: {}", user.getId());
     userRepository.save(user);
     return userMapper.toDto(user);
   }
 
   @Transactional
   public void deleteUser(UUID userId) {
+    log.debug("deleteUser() 호출");
     userRepository.findByIdWithProfile(userId)
         .ifPresent(user -> {
           user.getProfile().ifPresent(content -> binaryContentStorage.delete(content.getId()));
+          log.info("user 삭제. id: {}", user.getId());
           userRepository.delete(user);
         });
   }
 
   private void duplicationCheck(String username, String email) {
+    log.debug("duplicationCheck() 호출");
     if (userRepository.existsByEmail(email) || userRepository.existsByUsername(username)) {
+      log.error("중복된 이메일 or 이름. email: {}, username: {}", email, username);
       throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
     }
+  }
+
+
+  private BinaryContent createProfile(MultipartFile profile) {
+    log.debug("createProfile() 호출");
+    if (profile == null || profile.isEmpty()) {
+      return null;
+    }
+
+    long size = profile.getSize();
+    String fileName = profile.getOriginalFilename();
+    String contentType = fileName.substring(fileName.lastIndexOf('.'));
+
+    BinaryContent content = binaryContentRepository
+        .save(BinaryContent.create(size, fileName, contentType));
+    log.info("BinaryContent 생성. id: {}", content.getId());
+    try {
+      binaryContentStorage.put(content.getId(), profile.getBytes());
+    } catch (IOException e) {
+      log.error("파일 생성 실패");
+      throw new FileIOException("파일 생성 실패");
+    }
+
+    return content;
   }
 }
