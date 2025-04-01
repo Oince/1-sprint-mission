@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +63,10 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     Path path = resolvePath(response.id());
     try {
       UrlResource resource = new UrlResource("file:" + path);
-      return ResponseEntity.ok(resource);
+      String contentDisposition = "attachment; filename=\"" + resource.getFilename() + "\"";
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+          .body(resource);
     } catch (MalformedURLException e) {
       throw new FileIOException("잘못된 URL. file:" + path);
     }
