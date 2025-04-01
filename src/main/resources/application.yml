@@ -7,13 +7,13 @@ spring:
     password: discodeit1234
   jpa:
     database: postgresql
-    show-sql: true
     open-in-view: false
 
 discodeit:
   storage:
     local:
-      root-path: C:/Users/허원재/bootcamp/1-sprint-mission/files
-  repository:
-    type: file # jcf | file
-    file-directory: .discodeit
+      root-path: files
+
+logging:
+  level:
+    root: info
