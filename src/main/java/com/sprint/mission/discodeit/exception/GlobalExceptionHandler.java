@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
   @ExceptionHandler
-  public ResponseEntity<ErrorResult> expectedException(ExpectedException e,
+  public ResponseEntity<ErrorResult> expectedException(DiscodeitException e,
       HttpServletRequest request) {
     ErrorResult errorResult = new ErrorResult(e.getStatus(), e.getMessage(),
         request.getRequestURI());

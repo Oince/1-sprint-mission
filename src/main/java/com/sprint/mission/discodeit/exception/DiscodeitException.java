@@ -4,11 +4,11 @@ import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-public class ExpectedException extends RuntimeException {
+public class DiscodeitException extends RuntimeException {
 
   private final HttpStatus status;
 
-  public ExpectedException(HttpStatus status, String message) {
+  public DiscodeitException(HttpStatus status, String message) {
     super(message);
     this.status = status;
   }
