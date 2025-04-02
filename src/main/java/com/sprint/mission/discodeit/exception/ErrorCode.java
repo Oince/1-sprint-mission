@@ -24,7 +24,9 @@ public enum ErrorCode {
   DIRECTORY_CREATE_FAIL("저장 디렉토리 생성 실패", 500),
   FILE_CREATE_FAIL("파일 생성 실패", 500),
   FILE_READ_FAIL("파일 조회 실패", 500),
-  FILE_DELETE_FAIL("파일 삭제 실패", 500);
+  FILE_DELETE_FAIL("파일 삭제 실패", 500),
+  
+  UNKNOWN_EXCEPTION("서버 오류", 500);
 
   private final String message;
   private final int status;

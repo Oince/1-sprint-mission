@@ -1,22 +1,27 @@
 package com.sprint.mission.discodeit.exception;
 
-import lombok.Value;
-import org.springframework.http.HttpStatus;
-
 import java.time.Instant;
+import java.util.Map;
 
-@Value
-public class ErrorResult {
+public record ErrorResponse(
+    Instant timestamp,
+    String code,
+    String message,
+    Map<String, Object> details,
+    String exceptionType,
+    int status
+) {
 
-  int status;
-  String message;
-  String url;
-  Instant timestamp;
-
-  public ErrorResult(HttpStatus status, String message, String url) {
-    this.status = status.value();
-    this.message = message;
-    this.url = url;
-    this.timestamp = Instant.now();
+  public static ErrorResponse of(
+      ErrorCode errorCode, Map<String, Object> details, String exceptionType
+  ) {
+    return new ErrorResponse(
+        Instant.now(),
+        errorCode.name(),
+        errorCode.getMessage(),
+        details,
+        exceptionType,
+        errorCode.getStatus()
+    );
   }
 }

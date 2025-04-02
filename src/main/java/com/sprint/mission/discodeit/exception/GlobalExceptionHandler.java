@@ -1,8 +1,7 @@
 package com.sprint.mission.discodeit.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,18 +11,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
   @ExceptionHandler
-  public ResponseEntity<ErrorResult> expectedException(DiscodeitException e,
-      HttpServletRequest request) {
-    ErrorResult errorResult = new ErrorResult(e.getStatus(), e.getMessage(),
-        request.getRequestURI());
-    return ResponseEntity.status(e.getStatus()).body(errorResult);
+  public ResponseEntity<ErrorResponse> expectedException(DiscodeitException e) {
+    log.error("error: ", e);
+    ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode(), e.getDetails(),
+        e.getClass().getSimpleName());
+    return ResponseEntity.status(errorResponse.status()).body(errorResponse);
   }
 
   @ExceptionHandler
-  public ResponseEntity<ErrorResult> exception(RuntimeException e, HttpServletRequest request) {
+  public ResponseEntity<ErrorResponse> exception(RuntimeException e) {
     log.error("error: ", e);
-    ErrorResult errorResult = new ErrorResult(HttpStatus.INTERNAL_SERVER_ERROR,
-        "internal server error", request.getRequestURI());
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
+    ErrorResponse errorResponse = ErrorResponse.of(ErrorCode.UNKNOWN_EXCEPTION, Map.of(),
+        e.getClass().getSimpleName());
+    return ResponseEntity.status(errorResponse.status()).body(errorResponse);
   }
 }
