@@ -4,9 +4,9 @@ import com.sprint.mission.discodeit.exception.DiscodeitException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import java.util.Map;
 
-public class UserAuthenticationException extends DiscodeitException {
+public class UserException extends DiscodeitException {
 
-  public UserAuthenticationException(Map<String, Object> details) {
-    super(ErrorCode.AUTHENTICATION_FAIL, details);
+  public UserException(ErrorCode errorCode, Map<String, Object> details) {
+    super(errorCode, details);
   }
 }
