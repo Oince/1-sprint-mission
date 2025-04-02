@@ -6,9 +6,11 @@ import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.DuplicateException;
-import com.sprint.mission.discodeit.exception.FileIOException;
-import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.FileCreateException;
+import com.sprint.mission.discodeit.exception.user.UserAlreadyExistException;
+import com.sprint.mission.discodeit.exception.user.UserEmailDuplicateException;
+import com.sprint.mission.discodeit.exception.user.UserNameDuplicateException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -16,6 +18,7 @@ import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -68,17 +71,17 @@ public class UserService {
     String newUsername = userUpdateRequest.newUsername();
     String newPassword = userUpdateRequest.newPassword();
     User user = userRepository.findByIdWithProfile(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
+        .orElseThrow(() -> new UserNotFoundException(Map.of("id", userId)));
 
     if (newEmail != null) {
       if (!user.getEmail().equals(newEmail) && userRepository.existsByEmail(newEmail)) {
-        throw new DuplicateException("중복된 이메일");
+        throw new UserEmailDuplicateException(Map.of("newEmail", newEmail));
       }
       user.updateEmail(newEmail);
     }
     if (newUsername != null) {
       if (!user.getUsername().equals(newUsername) && userRepository.existsByUsername(newUsername)) {
-        throw new DuplicateException("중복된 이름");
+        throw new UserNameDuplicateException(Map.of("newUsername", newUsername));
       }
       user.updateName(newUsername);
     }
@@ -110,8 +113,8 @@ public class UserService {
   private void duplicationCheck(String username, String email) {
     log.debug("duplicationCheck() 호출");
     if (userRepository.existsByEmail(email) || userRepository.existsByUsername(username)) {
-      log.error("중복된 이메일 or 이름. email: {}, username: {}", email, username);
-      throw new DuplicateException("중복된 이름 혹은 이메일 입니다.");
+      log.error("중복된 이메일 혹은 이름. email: {}, username: {}", email, username);
+      throw new UserAlreadyExistException(Map.of());
     }
   }
 
@@ -133,7 +136,7 @@ public class UserService {
       binaryContentStorage.put(content.getId(), profile.getBytes());
     } catch (IOException e) {
       log.error("파일 생성 실패");
-      throw new FileIOException("파일 생성 실패");
+      throw new FileCreateException(Map.of());
     }
 
     return content;

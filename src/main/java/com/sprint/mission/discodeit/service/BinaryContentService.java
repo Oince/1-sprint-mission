@@ -2,14 +2,15 @@ package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.response.BinaryContentResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.exception.FileIOException;
-import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.FileCreateException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,7 +38,7 @@ public class BinaryContentService {
     try {
       binaryContentStorage.put(content.getId(), file.getBytes());
     } catch (IOException e) {
-      throw new FileIOException("파일 생성 실패");
+      throw new FileCreateException(Map.of());
     }
 
     return content;
@@ -55,7 +56,7 @@ public class BinaryContentService {
 
   public BinaryContentResponse find(UUID id) {
     BinaryContent content = binaryContentRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 binary newContent. id=" + id));
+        .orElseThrow(() -> new BinaryContentNotFoundException(Map.of("id", id)));
     return binaryContentMapper.toDto(content);
   }
 

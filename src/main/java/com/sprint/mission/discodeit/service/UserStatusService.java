@@ -2,11 +2,12 @@ package com.sprint.mission.discodeit.service;
 
 import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.exception.user.userstatus.UserStatusNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserStatusMapper;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class UserStatusService {
   @Transactional
   public UserStatusResponse update(UUID userId, Instant lastActiveAt) {
     UserStatus userStatus = userStatusRepository.findByUserId(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user에 대한 userStatus 접근"));
+        .orElseThrow(() -> new UserStatusNotFoundException(Map.of("userId", userId)));
     userStatus.updateLastActiveAt(lastActiveAt);
     userStatusRepository.save(userStatus);
     return userStatusMapper.toDto(userStatus);
@@ -31,7 +32,7 @@ public class UserStatusService {
 
   public UserStatusResponse findById(UUID id) {
     UserStatus userStatus = userStatusRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 userStatus. id=" + id));
+        .orElseThrow(() -> new UserStatusNotFoundException(Map.of("id", id)));
     return userStatusMapper.toDto(userStatus);
   }
 

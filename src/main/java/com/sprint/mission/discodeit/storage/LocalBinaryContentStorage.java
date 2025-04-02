@@ -1,7 +1,10 @@
 package com.sprint.mission.discodeit.storage;
 
 import com.sprint.mission.discodeit.dto.response.BinaryContentResponse;
-import com.sprint.mission.discodeit.exception.FileIOException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.DirectoryCreateException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.FileCreateException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.FileDeleteException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.FileReadException;
 import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -9,6 +12,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -32,7 +36,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       try {
         Files.createDirectories(root);
       } catch (IOException e) {
-        throw new FileIOException("저장 디렉토리 생성 실패");
+        throw new DirectoryCreateException(Map.of());
       }
     }
   }
@@ -43,7 +47,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     try {
       Files.write(path, data);
     } catch (IOException e) {
-      throw new FileIOException("파일 생성 실패: " + path);
+      throw new FileCreateException(Map.of("path", path));
     }
     return id;
   }
@@ -54,7 +58,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     try {
       return new ByteArrayInputStream(Files.readAllBytes(path));
     } catch (IOException e) {
-      throw new FileIOException("파일 읽기 실패: " + path);
+      throw new FileReadException(Map.of("path", path));
     }
   }
 
@@ -68,7 +72,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
           .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
           .body(resource);
     } catch (MalformedURLException e) {
-      throw new FileIOException("잘못된 URL. file:" + path);
+      throw new FileReadException(Map.of("path", path));
     }
   }
 
@@ -79,7 +83,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
       try {
         Files.delete(path);
       } catch (IOException e) {
-        throw new FileIOException("파일 삭제 실패: " + path);
+        throw new FileDeleteException(Map.of("path", path));
       }
     }
   }

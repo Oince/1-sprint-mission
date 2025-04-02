@@ -5,8 +5,10 @@ import com.sprint.mission.discodeit.dto.response.ReadStatusResponse;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.DuplicateException;
-import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusAlreadyExistException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -14,6 +16,7 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,12 +38,12 @@ public class ReadStatusService {
     UUID channelId = dto.channelId();
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + userId));
+        .orElseThrow(() -> new UserNotFoundException(Map.of("id", userId)));
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
+        .orElseThrow(() -> new ChannelNotFoundException(Map.of("id", channelId)));
 
     if (readStatusRepository.existsByUser_IdAndChannel_Id(userId, channelId)) {
-      throw new DuplicateException("이미 존재하는 ReadStatus");
+      throw new ReadStatusAlreadyExistException(Map.of());
     }
     ReadStatus readStatus = readStatusRepository.save(ReadStatus.create(user, channel));
     return readStatusMapper.toDto(readStatus);
@@ -48,7 +51,7 @@ public class ReadStatusService {
 
   private ReadStatus findById(UUID id) {
     return readStatusRepository.findById(id)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 ReadStatus. id=" + id));
+        .orElseThrow(() -> new ReadStatusNotFoundException(Map.of("id", id)));
   }
 
   public List<ReadStatusResponse> findAllByUserId(UUID userId) {

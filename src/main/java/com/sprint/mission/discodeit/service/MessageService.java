@@ -7,8 +7,11 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.FileIOException;
-import com.sprint.mission.discodeit.exception.NotFoundException;
+import com.sprint.mission.discodeit.exception.binarycontent.file.FileCreateException;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -21,6 +24,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,13 +58,13 @@ public class MessageService {
     UUID channelId = messageCreateRequest.channelId();
 
     Channel channel = channelRepository.findById(channelId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 channel. id=" + channelId));
+        .orElseThrow(() -> new ChannelNotFoundException(Map.of("id", channelId)));
     User user = userRepository.findById(authorId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 user. id=" + authorId));
+        .orElseThrow(() -> new UserNotFoundException(Map.of("id", authorId)));
 
     if (channel.getType() == Channel.Type.PRIVATE) {
       if (!readStatusRepository.existsByUser_IdAndChannel_Id(authorId, channelId)) {
-        throw new NotFoundException("채널에 등록되지 않은 user. id=" + authorId);
+        throw new ReadStatusNotFoundException(Map.of("authorId", authorId, "channelId", channelId));
       }
     }
 
@@ -77,7 +81,7 @@ public class MessageService {
             try {
               binaryContentStorage.put(content.getId(), attachment.getBytes());
             } catch (IOException e) {
-              throw new FileIOException("파일 생성 실패");
+              throw new FileCreateException(Map.of());
             }
             return content;
           })
@@ -120,7 +124,7 @@ public class MessageService {
   public MessageResponse updateMessage(UUID messageId, String content) {
     log.debug("updateMessage() 호출");
     Message message = messageRepository.findById(messageId)
-        .orElseThrow(() -> new NotFoundException("등록되지 않은 message. id=" + messageId));
+        .orElseThrow(() -> new MessageNotFoundException(Map.of("id", messageId)));
     message.updateContent(content);
 
     log.info("Message 수정. id: {}", messageId);
