@@ -25,7 +25,8 @@ public enum ErrorCode {
   FILE_CREATE_FAIL("파일 생성 실패", 500),
   FILE_READ_FAIL("파일 조회 실패", 500),
   FILE_DELETE_FAIL("파일 삭제 실패", 500),
-  
+
+  VALIDATION_FAIL("잘못된 요청 값", 400),
   UNKNOWN_EXCEPTION("서버 오류", 500);
 
   private final String message;
