@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.request.MessageUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.MessageResponse;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.service.MessageService;
+import jakarta.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -37,7 +38,7 @@ public class MessageController implements MessageControllerDocs {
   @PostMapping
   @Override
   public ResponseEntity<MessageResponse> createMessage(
-      @RequestPart MessageCreateRequest messageCreateRequest,
+      @RequestPart @Valid MessageCreateRequest messageCreateRequest,
       @RequestPart(required = false) List<MultipartFile> attachments
   ) {
     log.debug("POST /api/messages");
@@ -62,7 +63,7 @@ public class MessageController implements MessageControllerDocs {
   @Override
   public ResponseEntity<MessageResponse> updateMessage(
       @PathVariable UUID id,
-      @RequestBody MessageUpdateRequest messageUpdateRequest
+      @RequestBody @Valid MessageUpdateRequest messageUpdateRequest
   ) {
     log.debug("PATCH /api/messages/{}", id);
     MessageResponse messageResponse = messageService.updateMessage(id,

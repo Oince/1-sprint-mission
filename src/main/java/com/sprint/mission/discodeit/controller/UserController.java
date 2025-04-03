@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.dto.response.UserStatusResponse;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class UserController implements UserControllerDocs {
   @PostMapping
   @Override
   public ResponseEntity<UserResponse> createUser(
-      @RequestPart UserCreateRequest userCreateRequest,
+      @RequestPart @Valid UserCreateRequest userCreateRequest,
       @RequestPart(required = false) MultipartFile profile
   ) {
     log.debug("POST /api/users");
@@ -56,7 +57,7 @@ public class UserController implements UserControllerDocs {
   @Override
   public ResponseEntity<UserResponse> updateUser(
       @PathVariable UUID id,
-      @RequestPart UserUpdateRequest userUpdateRequest,
+      @RequestPart @Valid UserUpdateRequest userUpdateRequest,
       @RequestPart(required = false) MultipartFile profile
   ) {
     log.debug("PATCH /api/users/{}", id);
@@ -68,7 +69,7 @@ public class UserController implements UserControllerDocs {
   @Override
   public ResponseEntity<UserStatusResponse> updateUserOnline(
       @PathVariable UUID id,
-      @RequestBody UserStatusUpdateRequest userStatusUpdateRequest
+      @RequestBody @Valid UserStatusUpdateRequest userStatusUpdateRequest
   ) {
     log.debug("PATCH /api/users/{}/userStatus", id);
     UserStatusResponse userStatusResponse = userStatusService

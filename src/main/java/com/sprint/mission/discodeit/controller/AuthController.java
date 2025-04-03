@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.docs.AuthControllerDocs;
 import com.sprint.mission.discodeit.dto.request.UserLoginRequest;
 import com.sprint.mission.discodeit.dto.response.UserResponse;
 import com.sprint.mission.discodeit.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,7 @@ public class AuthController implements AuthControllerDocs {
 
   @PostMapping("/login")
   @Override
-  public ResponseEntity<UserResponse> login(@RequestBody UserLoginRequest userLoginRequest) {
+  public ResponseEntity<UserResponse> login(@RequestBody @Valid UserLoginRequest userLoginRequest) {
     UserResponse userResponse = authService.login(userLoginRequest);
     return ResponseEntity.ok(userResponse);
   }
