@@ -5,6 +5,15 @@ spring:
       hibernate:
         format_sql: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, loggers
+  info:
+    env:
+      enabled: true
+
 logging:
   level:
     org.hibernate.SQL: debug
