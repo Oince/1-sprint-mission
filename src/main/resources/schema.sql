@@ -56,5 +56,6 @@ create table messages(
 
 create table message_attachments(
 	message_id uuid references messages(id) on delete cascade,
-	attachment_id uuid references binary_contents(id) on delete cascade
+	attachment_id uuid references binary_contents(id) on delete cascade,
+    primary key (message_id, attachment_id)
 );
