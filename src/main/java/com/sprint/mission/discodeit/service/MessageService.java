@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -69,7 +68,7 @@ public class MessageService {
     }
 
     List<BinaryContent> contents = new ArrayList<>();
-    if (attachments != null) {
+    if (!(attachments == null || attachments.isEmpty())) {
       contents = attachments.stream()
           .map(attachment -> {
             long size = attachment.getSize();
@@ -88,8 +87,8 @@ public class MessageService {
           .toList();
     }
 
-    Message message = Message.create(user, messageCreateRequest.content(), channel, contents);
-    messageRepository.save(message);
+    Message message = messageRepository
+        .save(Message.create(user, messageCreateRequest.content(), channel, contents));
     log.info("Message 생성. id: {}", message.getId());
     return messageMapper.toDto(message);
   }
@@ -98,26 +97,16 @@ public class MessageService {
       UUID channelId, Instant cursor, Pageable pageable
   ) {
     log.debug("readAllByChannelId() 호출");
-    PageRequest pageRequest = PageRequest.of(0, pageable.getPageSize(), pageable.getSort());
-
     Slice<MessageResponse> slice;
     if (cursor == null) {
-      slice = messageRepository.findPageByChannelId(channelId, pageRequest)
+      slice = messageRepository.findPageByChannelId(channelId, pageable)
           .map(messageMapper::toDto);
     } else {
       slice = messageRepository
-          .findPageByChannelIdWithCursor(channelId, cursor, pageRequest)
+          .findPageByChannelIdWithCursor(channelId, cursor, pageable)
           .map(messageMapper::toDto);
     }
-
-    List<MessageResponse> content = slice.getContent();
-    Instant nextCursor;
-    if (content.isEmpty()) {
-      nextCursor = Instant.now();
-    } else {
-      nextCursor = content.get(content.size() - 1).createdAt();
-    }
-    return pageResponseMapper.fromSlice(slice, nextCursor);
+    return pageResponseMapper.fromMessageResponse(slice);
   }
 
   @Transactional
