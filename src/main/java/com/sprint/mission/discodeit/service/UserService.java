@@ -46,9 +46,9 @@ public class UserService {
     User newUser = User.create(userCreateRequest.username(), userCreateRequest.email(),
         userCreateRequest.password());
     BinaryContent content = createProfile(profile);
-    newUser.updateProfile(content);
 
-    userRepository.save(newUser);
+    newUser = userRepository.save(newUser);
+    newUser.updateProfile(content);
     log.info("User 생성. id: {}", newUser.getId());
     UserStatus userStatus = userStatusRepository.save(UserStatus.create(newUser));
     log.info("UserStatus 생성. id: {}", userStatus.getId());
@@ -67,7 +67,7 @@ public class UserService {
   public UserResponse updateUser(UUID userId, UserUpdateRequest userUpdateRequest,
       MultipartFile profile) {
     log.debug("updateUser() 호출");
-    String newEmail = userUpdateRequest.newUsername();
+    String newEmail = userUpdateRequest.newEmail();
     String newUsername = userUpdateRequest.newUsername();
     String newPassword = userUpdateRequest.newPassword();
     User user = userRepository.findByIdWithProfile(userId)

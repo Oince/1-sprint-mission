@@ -38,3 +38,4 @@ out/
 
 /.logs
 files/
+src/main/generated/
