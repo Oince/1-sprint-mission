@@ -70,7 +70,7 @@ public class UserService {
     String newEmail = userUpdateRequest.newEmail();
     String newUsername = userUpdateRequest.newUsername();
     String newPassword = userUpdateRequest.newPassword();
-    User user = userRepository.findByIdWithProfile(userId)
+    User user = userRepository.findByIdWithProfileAndStatus(userId)
         .orElseThrow(() -> new UserNotFoundException(Map.of("id", userId)));
 
     if (newEmail != null) {
@@ -102,7 +102,7 @@ public class UserService {
   @Transactional
   public void deleteUser(UUID userId) {
     log.debug("deleteUser() 호출");
-    userRepository.findByIdWithProfile(userId)
+    userRepository.findByIdWithProfileAndStatus(userId)
         .ifPresent(user -> {
           user.getProfile().ifPresent(content -> binaryContentStorage.delete(content.getId()));
           log.info("user 삭제. id: {}", user.getId());

@@ -188,7 +188,7 @@ class UserServiceTest {
 
     User user = User.create(username, email, password);
     ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
-    given(userRepository.findByIdWithProfile(user.getId())).willReturn(Optional.of(user));
+    given(userRepository.findByIdWithProfileAndStatus(user.getId())).willReturn(Optional.of(user));
     given(userRepository.existsByEmail(newEmail)).willReturn(false);
     given(userRepository.existsByUsername(newUsername)).willReturn(false);
 
@@ -214,7 +214,7 @@ class UserServiceTest {
 
     User user = User.create(username, email, password);
     ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
-    given(userRepository.findByIdWithProfile(user.getId())).willReturn(Optional.of(user));
+    given(userRepository.findByIdWithProfileAndStatus(user.getId())).willReturn(Optional.of(user));
 
     given(profile.isEmpty()).willReturn(false);
     given(profile.getSize()).willReturn(1024L);
@@ -252,7 +252,7 @@ class UserServiceTest {
 
     User user = User.create(username, email, password);
     ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
-    given(userRepository.findByIdWithProfile(user.getId())).willReturn(Optional.of(user));
+    given(userRepository.findByIdWithProfileAndStatus(user.getId())).willReturn(Optional.of(user));
     given(userRepository.existsByEmail(newEmail)).willReturn(true);
 
     assertThatThrownBy(() -> userService.updateUser(user.getId(), userUpdateRequest, null))
@@ -269,7 +269,7 @@ class UserServiceTest {
 
     User user = User.create(username, email, password);
     ReflectionTestUtils.setField(user, "id", UUID.randomUUID());
-    given(userRepository.findByIdWithProfile(user.getId())).willReturn(Optional.of(user));
+    given(userRepository.findByIdWithProfileAndStatus(user.getId())).willReturn(Optional.of(user));
     given(userRepository.existsByUsername(newUsername)).willReturn(true);
 
     assertThatThrownBy(() -> userService.updateUser(user.getId(), userUpdateRequest, null))
@@ -280,7 +280,8 @@ class UserServiceTest {
   @DisplayName("user 삭제 - user가 없는 경우")
   void deleteUser() {
     UUID userId = UUID.randomUUID();
-    given(userRepository.findByIdWithProfile(any(UUID.class))).willReturn(Optional.empty());
+    given(userRepository.findByIdWithProfileAndStatus(any(UUID.class))).willReturn(
+        Optional.empty());
 
     //when
     userService.deleteUser(userId);
@@ -296,7 +297,7 @@ class UserServiceTest {
     UUID userId = UUID.randomUUID();
     User user = User.create(username, email, password);
     ReflectionTestUtils.setField(user, "id", userId);
-    given(userRepository.findByIdWithProfile(userId)).willReturn(Optional.of(user));
+    given(userRepository.findByIdWithProfileAndStatus(userId)).willReturn(Optional.of(user));
 
     //when
     userService.deleteUser(userId);
