@@ -5,7 +5,6 @@ import com.sprint.mission.discodeit.dto.request.PrivateChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelRequest;
 import com.sprint.mission.discodeit.dto.request.PublicChannelUpdateRequest;
 import com.sprint.mission.discodeit.dto.response.ChannelResponse;
-import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.service.ChannelService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChannelController implements ChannelControllerDocs {
 
   private final ChannelService channelService;
-  private final ChannelMapper channelMapper;
 
   @PostMapping("/public")
   @Override
