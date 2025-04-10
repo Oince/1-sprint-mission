@@ -24,18 +24,9 @@
     </rollingPolicy>
   </appender>
 
-  <springProfile name="dev">
-    <logger name="com.sprint.mission.discodeit" level="DEBUG"/>
-    <root level="INFO">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="FILE"/>
-    </root>
-  </springProfile>
-  <springProfile name="prod">
-    <root level="INFO">
-      <appender-ref ref="CONSOLE"/>
-      <appender-ref ref="FILE"/>
-    </root>
-  </springProfile>
+  <root>
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+  </root>
 
 </configuration>
