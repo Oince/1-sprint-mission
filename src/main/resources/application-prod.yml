@@ -5,3 +5,11 @@ logging:
   level:
     com.sprint.mission.discodeit: info
     org.hibernate.SQL: info
+
+management:
+  endpoint:
+    health:
+      show-details: never
+  info:
+    env:
+      enabled: false
