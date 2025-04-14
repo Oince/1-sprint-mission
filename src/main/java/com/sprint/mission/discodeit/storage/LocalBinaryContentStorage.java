@@ -78,6 +78,7 @@ public class LocalBinaryContentStorage implements BinaryContentStorage {
     }
   }
 
+  @Override
   public void delete(UUID id) {
     Path path = resolvePath(id);
     if (Files.exists(path)) {
