@@ -3,3 +3,4 @@
 .logs
 build
 files
+src/main/resources/application-local.yml
