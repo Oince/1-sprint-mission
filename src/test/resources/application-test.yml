@@ -8,6 +8,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+discodeit:
+  storage:
+    type: local # local | s3
+    local:
+      root-path: files
+    s3:
+      access-key: accsee-key
+      secret-key: secret-key
+      region: ap-northeast-2
+      bucket: discodeit-binary-content-storage-wjh
+      presigned-url-expiration: 600
 
 logging:
   level:
