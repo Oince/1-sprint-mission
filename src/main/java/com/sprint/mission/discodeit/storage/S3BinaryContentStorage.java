@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.storage;
 
+import com.sprint.mission.discodeit.config.S3StorageProperties;
 import com.sprint.mission.discodeit.dto.response.BinaryContentResponse;
 import java.io.InputStream;
 import java.net.URI;
@@ -7,7 +8,6 @@ import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -29,22 +29,12 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 
   private final S3Client s3Client;
   private final S3Presigner s3Presigner;
-
-  @Value("${discodeit.storage.s3.region}")
-  private String region;
-  @Value("${discodeit.storage.s3.access-key}")
-  private String accessKey;
-  @Value("${discodeit.storage.s3.secret-key}")
-  private String secretKey;
-  @Value("${discodeit.storage.s3.bucket}")
-  private String bucketName;
-  @Value("${discodeit.storage.s3.presigned-url-expiration}")
-  private int presignedUrlExpiration;
+  private final S3StorageProperties properties;
 
   @Override
   public UUID put(UUID id, byte[] data) {
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-        .bucket(bucketName)
+        .bucket(properties.getBucket())
         .key(id.toString())
         .build();
 
@@ -56,7 +46,7 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
   @Override
   public InputStream get(UUID id) {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-        .bucket(bucketName)
+        .bucket(properties.getBucket())
         .key(id.toString())
         .build();
 
@@ -74,13 +64,13 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
 
   private String generatePresignedUrl(String key, String contentType) {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-        .bucket(bucketName)
+        .bucket(properties.getBucket())
         .key(key)
         .responseContentDisposition("attachment; filename=\"" + key + "." + contentType + "\"")
         .build();
 
     GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-        .signatureDuration(Duration.ofSeconds(presignedUrlExpiration))
+        .signatureDuration(Duration.ofSeconds(properties.getPresignedUrlExpiration()))
         .getObjectRequest(getObjectRequest)
         .build();
 

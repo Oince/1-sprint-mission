@@ -1,9 +1,9 @@
 package com.sprint.mission.discodeit.storage.s3;
 
+import com.sprint.mission.discodeit.config.S3StorageProperties;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -27,8 +27,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class AWSS3Test {
   private final S3Client s3Client;
 
-  @Value("${discodeit.storage.s3.bucket}")
-  private String bucketName;
+  private S3StorageProperties properties;
 
   @PostMapping("/s3/test")
   public String uploadFile(@RequestParam MultipartFile file) throws IOException {
@@ -37,7 +36,7 @@ public class AWSS3Test {
 
     // 2) PutObjectRequest 생성
     PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-        .bucket(bucketName)
+        .bucket(properties.getBucket())
         .key(uniqueFileName)
         .build();
 
@@ -50,7 +49,7 @@ public class AWSS3Test {
   @GetMapping("/s3/test")
   public ResponseEntity<Resource> downloadFile(@RequestParam String fileName) throws IOException {
     GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-        .bucket(bucketName)
+        .bucket(properties.getBucket())
         .key(fileName)
         .build();
 
