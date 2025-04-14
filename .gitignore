@@ -40,3 +40,4 @@ out/
 files/
 src/main/generated/
 .env
+src/main/resources/application-local.yml
