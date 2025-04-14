@@ -12,9 +12,9 @@ import software.amazon.awssdk.services.s3.S3Client;
 public class AwsS3Config {
   @Value("${discodeit.storage.s3.region}")
   private String region;
-  @Value("${discodeit.storage.s3.accessKey}")
+  @Value("${discodeit.storage.s3.access-key}")
   private String accessKey;
-  @Value("${discodeit.storage.s3.secretKey}")
+  @Value("${discodeit.storage.s3.secret-key}")
   private String secretKey;
 
   @Bean
