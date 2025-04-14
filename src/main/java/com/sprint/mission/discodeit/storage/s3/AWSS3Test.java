@@ -27,7 +27,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class AWSS3Test {
   private final S3Client s3Client;
 
-  private S3StorageProperties properties;
+  private final S3StorageProperties properties;
 
   @PostMapping("/s3/test")
   public String uploadFile(@RequestParam MultipartFile file) throws IOException {
