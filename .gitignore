@@ -39,5 +39,5 @@ out/
 /.logs
 files/
 src/main/generated/
-.env
+*.env
 src/main/resources/application-local.yml
