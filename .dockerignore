@@ -3,4 +3,11 @@
 .logs
 build
 files
-src/main/resources/application-local.yml
+*.env
+.git
+.github
+.gitattributes
+.gitignore
+Dockerfile
+docker-compose.yml
+README.md

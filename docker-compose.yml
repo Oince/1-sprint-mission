@@ -15,6 +15,7 @@ services:
       AWS_S3_BUCKET: ${AWS_S3_BUCKET}
       AWS_S3_PRESIGNED_URL_EXPIRATION: ${AWS_S3_PRESIGNED_URL_EXPIRATION}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      JVM_OPTS: ${JVM_OPTS}
     volumes:
       - binary-content-storage:/app/files
     depends_on:
