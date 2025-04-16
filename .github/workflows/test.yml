@@ -1,9 +1,9 @@
 name: CI teat
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - part3-허원재-sprint8
 
 jobs:
   build:
