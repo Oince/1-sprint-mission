@@ -5,14 +5,14 @@ on:
     branches:
       - deploy
 env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPO: discodeit
-  ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
-  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  ECR_REPOSITORY_URI: ${{ secrets.ECR_REPOSITORY_URI }}
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
   IMAGE_TAG: ${{ github.sha }}
-  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
-  ECS_SERVICE: ${{ vars.ECS_SERVICE }}
-  ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+  ECS_TASK_DEFINITION: ${{ secrets.ECS_TASK_DEFINITION }}
 
 permissions:
   id-token: write
@@ -45,6 +45,7 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-latest
+    environment: aws
 
     steps:
       - uses: actions/checkout@v4
