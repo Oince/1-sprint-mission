@@ -57,6 +57,11 @@ jobs:
 
       - uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Debug env
+        run: |
+          echo "ECR_REPOSITORY_URI=[$ECR_REPOSITORY_URI]"
+          echo "ECR_REGISTRY=[$ECR_REGISTRY]"
+
       - run: |
           docker build -t $ECR_REPO:$IMAGE_TAG .
           docker tag   $ECR_REPO:$IMAGE_TAG $ECR_REPOSITORY_URI:$IMAGE_TAG
