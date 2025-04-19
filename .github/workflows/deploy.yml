@@ -8,7 +8,6 @@ env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPO: discodeit
   ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
-  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
   IMAGE_TAG: ${{ github.sha }}
   ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
   ECS_SERVICE: ${{ vars.ECS_SERVICE }}
@@ -55,11 +54,8 @@ jobs:
           aws-region: us-east-1
 
       - uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Debug env
-        run: |
-          echo "ECR_REPOSITORY_URI=[$ECR_REPOSITORY_URI]"
-          echo "ECR_REGISTRY=[$ECR_REGISTRY]"
+        with:
+          registry-type: public
 
       - run: |
           docker build -t $ECR_REPO:$IMAGE_TAG .
