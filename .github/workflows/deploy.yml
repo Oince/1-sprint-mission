@@ -1,0 +1,62 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - part3-허원재-sprint8
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPO: discodeit
+  ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
+  ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+  IMAGE_TAG: ${{ github.sha }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+  ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - run: chmod +x gradlew
+
+      - name: Test
+        run: ./gradlew test --no-daemon
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/jacoco/test/jacocoTestReport.xml
+          slug: Oince/1-sprint-mission
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-east-1
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - run: |
+          docker build -t $ECR_REPO:$IMAGE_TAG .
+          docker tag   $ECR_REPO:$IMAGE_TAG $ECR_REPOSITORY_URI:$IMAGE_TAG
+          docker push  $ECR_REPOSITORY_URI:$IMAGE_TAG
+          
