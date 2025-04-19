@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     branches:
-      - part3-허원재-sprint8
+      - deploy
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPO: discodeit
@@ -41,6 +41,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build/reports/jacoco/test/jacocoTestReport.xml
           slug: Oince/1-sprint-mission
+
   build-and-push:
     runs-on: ubuntu-latest
 
