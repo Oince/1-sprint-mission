@@ -52,12 +52,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{vars.AWS_REGION}}
 
-      - name: List taskdef path
-        run: |
-          echo "::group::Workspace tree"
-          ls -R
-          echo "::endgroup::"
-
       - id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -71,5 +65,15 @@ jobs:
           service: ${{ vars.ECS_SERVICE }}
           task-definition: ${{ steps.render.outputs.task-definition }}
           wait-for-service-stability: true
+          desired-count: 0
+
+
+      - uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          cluster: ${{ vars.ECS_CLUSTER }}
+          service: ${{ vars.ECS_SERVICE }}
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          wait-for-service-stability: true
+          desired-count: 1
 
 
