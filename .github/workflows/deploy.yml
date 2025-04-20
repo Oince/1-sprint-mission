@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     branches:
-      - part3-허원재-sprint8
+      - release
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPO: discodeit
