@@ -4,11 +4,11 @@ WORKDIR /app
 
 COPY build.gradle settings.gradle ./
 
-RUN gradle dependencies
+RUN ./gradlew dependencies
 
 COPY . .
 
-RUN gradle clean build --no-daemon
+RUN ./gradlew clean build --no-daemon
 
 FROM amazoncorretto:17
 
