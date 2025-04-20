@@ -3,7 +3,7 @@ name: CD
 on:
   push:
     branches:
-      - deploy
+      - release
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   ECR_REPO: discodeit
@@ -16,7 +16,6 @@ env:
 permissions:
   id-token: write
   contents: read
-
 
 jobs:
   build-and-push:
