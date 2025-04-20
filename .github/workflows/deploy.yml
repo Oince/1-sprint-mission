@@ -52,6 +52,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{vars.AWS_REGION}}
 
+      - name: List taskdef path
+        run: |
+          echo "::group::Workspace tree"
+          ls -R
+          echo "::endgroup::"
+
       - id: render
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
