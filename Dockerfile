@@ -11,6 +11,7 @@ COPY build.gradle settings.gradle ./
 RUN ./gradlew dependencies
 
 COPY . .
+RUN chmod +x gradlew
 
 RUN ./gradlew clean build --no-daemon
 
