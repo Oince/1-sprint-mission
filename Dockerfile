@@ -2,6 +2,9 @@ FROM gradle:7.6.4-jdk17 AS builder
 
 WORKDIR /app
 
+COPY gradlew gradle /app/
+RUN chmod +x gradlew
+
 COPY build.gradle settings.gradle ./
 
 RUN ./gradlew dependencies
